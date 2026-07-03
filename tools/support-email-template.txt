@@ -1,0 +1,53 @@
+Subject: CleanVault Support Request
+
+Thank you for contacting CleanVault support.
+
+We aim to respond within 24 hours.
+
+---
+
+Please reply to this email with:
+
+1. **Your License Key** (if applicable):
+   - Format: CV-PRO-XXXX-YYYYMMDD-SIG
+
+2. **Describe the issue**:
+   - What were you trying to do?
+   - What happened instead?
+   - What browser are you using? (Chrome, Firefox, Edge, Safari)
+   - What device are you on? (Desktop, Mobile, Tablet)
+
+3. **Steps to reproduce**:
+   - Step 1
+   - Step 2
+   - Step 3
+
+4. **Screenshots** (if helpful):
+   - Attach any relevant screenshots
+
+---
+
+Common Issues:
+
+**"My license key doesn't work"**
+- Make sure you're copying the entire key including "CV-PRO-"
+- Check that the key hasn't expired
+- Try typing the key instead of copy-pasting (sometimes hidden characters get included)
+
+**"The tool is slow"**
+- Very large PDFs (100+ MB) may be slow
+- Try with a smaller PDF to confirm the tool works
+- Close other browser tabs to free up memory
+
+**"My download didn't start"**
+- Check your browser's download settings
+- Make sure pop-ups aren't blocked
+- Try clicking the button again
+
+---
+
+CleanVault Support
+support@cleanvault.com
+https://cleanvault.com
+
+*Your files never leave your computer.*

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CleanVault - Privacy-First PDF Tools That Run In Your Browser</title>
+    <meta name="description" content="Merge, split, extract, and rotate PDFs privately. CleanVault processes your files locally in your browser. No uploads, no storage, complete privacy.">
+    <meta name="keywords" content="merge PDF online, split PDF online, private PDF tools, PDF tools without upload, browser PDF tools, secure PDF merger, local PDF tools">
+    <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <svg class="logo-icon" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="32" height="32" rx="6" fill="#1e3a5f"/>
+                    <path d="M8 10h16v2H8zM8 16h12v2H8zM8 22h8v2H8z" fill="#4ade80"/>
+                </svg>
+                <span class="logo-text">CleanVault</span>
+                <span id="pro-badge" class="pro-badge">Free</span>
+            </div>
+            <nav class="nav">
+                <a href="#tools">PDF Tools</a>
+                <a href="#privacy">Privacy</a>
+                <a href="#pricing">Pricing</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Privacy-First PDF Tools</h1>
+            <p class="hero-subtitle">Merge, split, rotate, and extract PDFs without uploading your files.</p>
+            <p class="hero-tagline">Your files never leave your computer.</p>
+            <div class="hero-buttons">
+                <a href="#tools" class="btn btn-primary">Use CleanVault Free</a>
+                <a href="#pricing" class="btn btn-secondary">Get CleanVault Pro</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tools Section -->
+    <section id="tools" class="tools">
+        <div class="container">
+            <h2>PDF Tools</h2>
+            <div class="tools-grid">
+                <!-- Merge PDF Card -->
+                <div class="tool-card">
+                    <div class="tool-icon">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
+                            <path d="M24 16v16M16 24h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3>PDF Merge</h3>
+                    <p>Combine multiple PDF files into one document.</p>
+                    <button class="btn btn-secondary" onclick="showTool('merge')">Merge PDFs</button>
+                </div>
+
+                <!-- Split PDF Card -->
+                <div class="tool-card">
+                    <div class="tool-icon">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
+                            <path d="M24 16v16M20 20l8-4M20 28l8 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>PDF Split</h3>
+                    <p>Split a PDF into multiple files by page ranges.</p>
+                    <button class="btn btn-secondary" onclick="showTool('split')">Split PDF</button>
+                </div>
+
+                <!-- Extract Pages Card -->
+                <div class="tool-card">
+                    <div class="tool-icon">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
+                            <path d="M16 20h16M16 28h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3>Extract Pages</h3>
+                    <p>Extract specific pages from a PDF document.</p>
+                    <button class="btn btn-secondary" onclick="showTool('extract')">Extract Pages</button>
+                </div>
+
+                <!-- Rotate PDF Card -->
+                <div class="tool-card">
+                    <div class="tool-icon">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
+                            <path d="M24 16v8l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M24 32a8 8 0 100-16 8 8 0 000 16z" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <h3>Rotate PDF</h3>
+                    <p>Rotate pages in your PDF document.</p>
+                    <button class="btn btn-secondary" onclick="showTool('rotate')">Rotate PDF</button>
+                </div>
+
+                <!-- Compress PDF Card -->
+                <div class="tool-card">
+                    <div class="tool-icon">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
+                            <path d="M24 16v16M20 20l8-4M20 28l8 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="24" cy="32" r="2" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <h3>Optimize PDF</h3>
+                    <p>Remove metadata and optimize PDF structure.</p>
+                    <button class="btn btn-secondary" onclick="showTool('compress')">Optimize PDF</button>
+                </div>
+
+                <!-- Reorder Pages Card -->
+                <div class="tool-card">
+                    <div class="tool-icon">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
+                            <path d="M24 16v8l6 6M24 32a8 8 0 100-16 8 8 0 000 16z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>Reorder Pages</h3>
+                    <p>Drag and drop to rearrange pages in your PDF.</p>
+                    <button class="btn btn-secondary" onclick="showTool('reorder')">Reorder Pages</button>
+                </div>
+
+                <!-- Remove Pages Card -->
+                <div class="tool-card">
+                    <div class="tool-icon">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
+                            <path d="M16 16h16M16 24h16M16 32h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M28 16l-4 4 4 4M28 32l-4-4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>Remove Pages</h3>
+                    <p>Delete specific pages from your PDF.</p>
+                    <button class="btn btn-secondary" onclick="showTool('remove')">Remove Pages</button>
+                </div>
+
+                <!-- Watermark Card (Pro) -->
+                <div class="tool-card pro-tool">
+                    <div class="pro-badge-card">Pro</div>
+                    <div class="tool-icon">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
+                            <path d="M24 16v16M20 20l8-4M20 28l8 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="24" cy="32" r="2" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <h3>Add Watermark</h3>
+                    <p>Add text watermarks to all pages in your PDF.</p>
+                    <button class="btn btn-secondary" onclick="showTool('watermark')">Add Watermark</button>
+                    <button class="btn btn-upgrade" onclick="showUpgradeModal()">Upgrade to Pro</button>
+                </div>
+
+                <!-- Page Numbers Card (Pro) -->
+                <div class="tool-card pro-tool">
+                    <div class="pro-badge-card">Pro</div>
+                    <div class="tool-icon">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
+                            <path d="M16 20h16M16 28h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3>Add Page Numbers</h3>
+                    <p>Add page numbers to all pages in your PDF.</p>
+                    <button class="btn btn-secondary" onclick="showTool('pagenumbers')">Add Page Numbers</button>
+                    <button class="btn btn-upgrade" onclick="showUpgradeModal()">Upgrade to Pro</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tool Interface Section -->
+    <section id="tool-interface" class="tool-interface" style="display: none;">
+        <div class="container">
+            <button class="btn-back" onclick="hideTool()">← Back to Tools</button>
+            <div id="tool-content"></div>
+        </div>
+    </section>
+
+    <!-- Privacy Section -->
+    <section id="privacy" class="privacy">
+        <div class="container">
+            <h2>Your Privacy Matters</h2>
+            <div class="privacy-content">
+                <div class="privacy-item">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M16 4L4 8v8c0 7.7 5.1 14.9 12 17 6.9-2.1 12-9.3 12-17V8L16 4z" stroke="currentColor" stroke-width="2" fill="none"/>
+                        <path d="M10 16l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <h3>No Uploads</h3>
+                    <p>Your files never leave your computer. Everything is processed locally in your browser.</p>
+                </div>
+                <div class="privacy-item">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="6" y="10" width="20" height="16" rx="2" stroke="currentColor" stroke-width="2" fill="none"/>
+                        <path d="M12 10V8a4 4 0 018 0v2" stroke="currentColor" stroke-width="2" fill="none"/>
+                        <circle cx="16" cy="18" r="2" fill="currentColor"/>
+                    </svg>
+                    <h3>No Storage</h3>
+                    <p>We don't store your documents. Once you close the browser, everything is gone.</p>
+                </div>
+                <div class="privacy-item">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M16 4v24M8 8l8-4 8 4M8 24l8 4 8-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <h3>Complete Privacy</h3>
+                    <p>No tracking, no analytics, no data collection. Your documents stay yours.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- License Activation Section -->
+    <section id="activation" class="activation-section">
+        <div class="container">
+            <h2>Activate CleanVault Pro</h2>
+            <p>Already purchased a license? Enter your key below to unlock all Pro features including Watermarks, Page Numbers, and Password Protection.</p>
+            <div class="activation-form">
+                <input type="text" id="license-input" placeholder="CV-PRO-XXXX-YYYYMMDD-SIG" class="license-input">
+                <button id="activate-btn" class="btn btn-primary">Activate Pro</button>
+            </div>
+            <p id="activation-status" class="activation-status"></p>
+            <button id="deactivate-btn" class="btn btn-secondary" style="display: none;">Deactivate Pro</button>
+            <p class="form-hint">Pro activation is stored in your browser's localStorage. Keep your license key safe for reactivation.</p>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="pricing">
+        <div class="container">
+            <h2>Get CleanVault Pro</h2>
+            <p class="pricing-subtitle">Annual subscription. Billed yearly. Cancel anytime.</p>
+            
+            <div class="pricing-grid">
+                <!-- Personal Plan -->
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3>Personal</h3>
+                        <p class="pricing-description">For individual users</p>
+                        <div class="pricing-price">
+                            <span class="price">$29.99</span>
+                            <span class="period">/year</span>
+                        </div>
+                    </div>
+                    
+                    <ul class="pricing-features">
+                        <li>✓ All Free PDF Tools</li>
+                        <li>✓ Add Watermarks</li>
+                        <li>✓ Add Page Numbers</li>
+                        <li>✓ Password Protection</li>
+                        <li>✓ 1 year of updates</li>
+                        <li>✓ Priority support</li>
+                    </ul>
+                    
+                    <button class="btn btn-primary btn-pricing" onclick="handleUpgrade()">
+                        Get CleanVault Pro
+                    </button>
+                    
+                    <!-- Founding Member Ribbon -->
+                    <div class="founding-ribbon">
+                        <span class="founding-ribbon-label">Founding Member</span>
+                        <div class="founding-ribbon-content">
+                            <span class="founding-price">$19.99</span>
+                            <span class="founding-note">Price locked while subscription active</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Corporate Plan -->
+                <div class="pricing-card corporate">
+                    <div class="pricing-badge">Best Value</div>
+                    <div class="pricing-header">
+                        <h3>Corporate</h3>
+                        <p class="pricing-description">For teams and businesses</p>
+                        <div class="pricing-price">
+                            <span class="price">$99.99</span>
+                            <span class="period">/year</span>
+                        </div>
+                    </div>
+                    
+                    <ul class="pricing-features">
+                        <li>✓ All Pro features</li>
+                        <li>✓ Up to 10 users</li>
+                        <li>✓ 1 year of updates</li>
+                        <li>✓ Priority support</li>
+                        <li>✓ Volume licensing</li>
+                    </ul>
+                    
+                    <button class="btn btn-primary btn-pricing" onclick="handleUpgrade()">
+                        Get Corporate
+                    </button>
+
+                    <!-- Corporate Founding Member Ribbon -->
+                    <div class="founding-ribbon corporate-ribbon">
+                        <span class="founding-ribbon-label">Founding Member</span>
+                        <div class="founding-ribbon-content">
+                            <span class="founding-price">$79.99</span>
+                            <span class="founding-note">Limited to first 100 customers</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="pricing-guarantee">
+                <p>🔒 Annual subscription · Renew yearly to continue receiving Pro features and updates</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <svg class="logo-icon" width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="32" height="32" rx="6" fill="#1e3a5f"/>
+                        <path d="M8 10h16v2H8zM8 16h12v2H8zM8 22h8v2H8z" fill="#4ade80"/>
+                    </svg>
+                    <span>CleanVault</span>
+                </div>
+                <p>Privacy-first browser tools.</p>
+                <p class="footer-tagline">Your files never leave your computer.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="js/pdf-tools.js"></script>
+    <script src="js/license.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/merge.js"></script>
+    <script src="js/split.js"></script>
+    <script src="js/extract.js"></script>
+    <script src="js/rotate.js"></script>
+    <script src="js/optimize.js"></script>
+    <script src="js/reorder.js"></script>
+    <script src="js/watermark.js"></script>
+    <script src="js/page-numbers.js"></script>
+    <script src="js/remove.js"></script>
+</body>
+</html>

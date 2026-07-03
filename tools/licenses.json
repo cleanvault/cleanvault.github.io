@@ -1,0 +1,128 @@
+[
+  {
+    "license": "CV-PRO-01PRO-9B51D804-20270628-1BE1784200000000",
+    "email": "test@example.com",
+    "plan": "pro",
+    "expiration": "2027-06-28T00:00:00.000Z",
+    "created": "2026-07-03T09:44:59.126Z"
+  },
+  {
+    "license": "CV-PRO-01PRO-F8634AD3-20270628-747864E100000000",
+    "email": "test1@example.com",
+    "plan": "pro",
+    "expiration": "2027-06-28T00:00:00.000Z",
+    "created": "2026-07-03T09:44:59.127Z"
+  },
+  {
+    "license": "CV-PRO-01PRO-3B2B5893-20270628-78F1345100000000",
+    "email": "test2@example.com",
+    "plan": "pro",
+    "expiration": "2027-06-28T00:00:00.000Z",
+    "created": "2026-07-03T09:44:59.127Z"
+  },
+  {
+    "license": "CV-PRO-01PRO-1688527F-20270628-24A1380E00000000",
+    "email": "test@example.com",
+    "plan": "pro",
+    "expiration": "2027-06-28T00:00:00.000Z",
+    "created": "2026-07-03T09:45:15.025Z"
+  },
+  {
+    "license": "CV-PRO-01PRO-7C59924A-20270628-32A6768C00000000",
+    "email": "test1@example.com",
+    "plan": "pro",
+    "expiration": "2027-06-28T00:00:00.000Z",
+    "created": "2026-07-03T09:45:15.026Z"
+  },
+  {
+    "license": "CV-PRO-01PRO-1E3BB6CC-20270628-58C3746C00000000",
+    "email": "test2@example.com",
+    "plan": "pro",
+    "expiration": "2027-06-28T00:00:00.000Z",
+    "created": "2026-07-03T09:45:15.035Z"
+  },
+  {
+    "license": "CV-PRO-01PRO-AD4002A2-20270628-4E6A4F0D00000000",
+    "email": "test@example.com",
+    "plan": "pro",
+    "expiration": "2027-06-28T00:00:00.000Z",
+    "created": "2026-07-03T09:58:37.533Z"
+  },
+  {
+    "license": "CV-PRO-01PRO-1D61A63A-20270628-5E63981900000000",
+    "email": "test1@example.com",
+    "plan": "pro",
+    "expiration": "2027-06-28T00:00:00.000Z",
+    "created": "2026-07-03T09:58:37.534Z"
+  },
+  {
+    "license": "CV-PRO-01PRO-F708C18C-20270628-3EF8769900000000",
+    "email": "test2@example.com",
+    "plan": "pro",
+    "expiration": "2027-06-28T00:00:00.000Z",
+    "created": "2026-07-03T09:58:37.542Z"
+  },
+  {
+    "license": "CV-PRO-01PRO-5715C8B8-20270628-72795F2E00000000",
+    "email": "test@example.com",
+    "plan": "pro",
+    "expiration": "2027-06-28T00:00:00.000Z",
+    "created": "2026-07-03T09:59:08.884Z"
+  },
+  {
+    "license": "CV-PRO-01PRO-AAFF0B6B-20270628-2F64B92C00000000",
+    "email": "test1@example.com",
+    "plan": "pro",
+    "expiration": "2027-06-28T00:00:00.000Z",
+    "created": "2026-07-03T09:59:08.886Z"
+  },
+  {
+    "license": "CV-PRO-01PRO-BFA854F6-20270628-78D1A00100000000",
+    "email": "test2@example.com",
+    "plan": "pro",
+    "expiration": "2027-06-28T00:00:00.000Z",
+    "created": "2026-07-03T09:59:08.894Z"
+  },
+  {
+    "license": "CV-PRO-01PRO-B4BD5469-20270628-4BB7E06900000000",
+    "email": "test@example.com",
+    "plan": "pro",
+    "expiration": "2027-06-28T00:00:00.000Z",
+    "created": "2026-07-03T10:33:39.618Z"
+  },
+  {
+    "license": "CV-PRO-01PRO-999DF436-20270628-67E0A4B200000000",
+    "email": "test1@example.com",
+    "plan": "pro",
+    "expiration": "2027-06-28T00:00:00.000Z",
+    "created": "2026-07-03T10:33:39.619Z"
+  },
+  {
+    "license": "CV-PRO-01PRO-FE4DFE9A-20270628-7BC34A4B00000000",
+    "email": "test2@example.com",
+    "plan": "pro",
+    "expiration": "2027-06-28T00:00:00.000Z",
+    "created": "2026-07-03T10:33:39.627Z"
+  },
+  {
+    "license": "CV-PRO-01PRO-9DFC2A3F-20270628-5ACE72D500000000",
+    "email": "test@example.com",
+    "plan": "pro",
+    "expiration": "2027-06-28T00:00:00.000Z",
+    "created": "2026-07-03T10:40:16.315Z"
+  },
+  {
+    "license": "CV-PRO-01PRO-F306E190-20270628-40CC372C00000000",
+    "email": "test1@example.com",
+    "plan": "pro",
+    "expiration": "2027-06-28T00:00:00.000Z",
+    "created": "2026-07-03T10:40:16.316Z"
+  },
+  {
+    "license": "CV-PRO-01PRO-740D4EF8-20270628-5F9A390900000000",
+    "email": "test2@example.com",
+    "plan": "pro",
+    "expiration": "2027-06-28T00:00:00.000Z",
+    "created": "2026-07-03T10:40:16.324Z"
+  }
+]
