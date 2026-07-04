@@ -94,8 +94,24 @@ function initializeRemoveTool() {
 
 async function handleRemoveFile(file) {
     if (!file || !validatePDF(file)) return;
+    
+    // Check limits
+    const limitCheck = LimitsManager.canUseTool('remove');
+    if (!limitCheck.allowed) {
+        showStatus('error', limitCheck.reason);
+        return;
+    }
+    
     try {
         const info = await PDFTools.getPDFInfo(file);
+        
+        // Check page limit
+        const pageCheck = LimitsManager.canProcessFile(file, info.pageCount);
+        if (!pageCheck.allowed) {
+            showStatus('error', pageCheck.reason);
+            return;
+        }
+        
         currentFiles = [file];
         showPageInfo('remove', file, info.pageCount);
         document.getElementById('remove-group').style.display = 'block';
@@ -117,6 +133,7 @@ async function performRemovePages() {
         setLoading(removeBtn, 'Removing...');
         showStatus('info', 'Removing pages... This may take a moment.');
         const result = await PDFTools.removePDFPages(currentFiles[0], pagesToRemove);
+        LimitsManager.trackOperation();
         showStatus('success', `Removed ${pagesToRemove.length} page(s) successfully! Downloading...`);
         PDFTools.downloadFile(result.data, result.name);
         setTimeout(() => {

@@ -99,11 +99,20 @@ function removeMergeFile(index) {
 
 async function performMerge() {
     if (currentFiles.length < 2) { showStatus('error', 'Please select at least 2 PDF files to merge'); return; }
+    
+    // Check limits
+    const limitCheck = LimitsManager.canUseTool('merge');
+    if (!limitCheck.allowed) {
+        showStatus('error', limitCheck.reason);
+        return;
+    }
+    
     const mergeBtn = document.getElementById('merge-btn');
     try {
         setLoading(mergeBtn, 'Merging...');
         showStatus('info', 'Merging PDFs... This may take a moment.');
         const mergedPdfBytes = await PDFTools.mergePDFs(currentFiles);
+        LimitsManager.trackOperation();
         PDFTools.downloadFile(mergedPdfBytes, 'merged.pdf');
         showStatus('success', 'PDFs merged successfully! Downloading...');
         setTimeout(() => {

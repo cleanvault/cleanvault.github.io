@@ -58,12 +58,30 @@ function initializePageNumbersTool() {
 async function handlePageNumbersFile(file) {
     if (!file) return;
     if (file.type !== 'application/pdf') { showStatus('error', 'Invalid file type. Please select a PDF file.'); return; }
+    
+    // Check Pro status
     if (typeof LicenseManager !== 'undefined' && !LicenseManager.isActivated()) {
         showStatus('error', '⚠️ This is a Pro feature. Please upgrade to CleanVault Pro to unlock page numbers and all Pro features.');
         return;
     }
+    
+    // Check limits
+    const limitCheck = LimitsManager.canUseTool('pagenumbers');
+    if (!limitCheck.allowed) {
+        showStatus('error', limitCheck.reason);
+        return;
+    }
+    
     try {
         const info = await PDFTools.getPDFInfo(file);
+        
+        // Check page limit
+        const pageCheck = LimitsManager.canProcessFile(file, info.pageCount);
+        if (!pageCheck.allowed) {
+            showStatus('error', pageCheck.reason);
+            return;
+        }
+        
         currentFiles = [file];
         showPageInfo('pagenumbers', file, info.pageCount);
         document.getElementById('pagenumbers-options-group').style.display = 'block';
@@ -83,6 +101,7 @@ async function performPageNumbers() {
         setLoading(pageNumbersBtn, 'Adding Page Numbers...');
         showStatus('info', 'Adding page numbers... This may take a moment.');
         const result = await PDFTools.addPageNumbers(currentFiles[0], options);
+        LimitsManager.trackOperation();
         PDFTools.downloadFile(result.data, result.name);
         showStatus('success', 'Page numbers added successfully! Downloading...');
         setTimeout(() => {

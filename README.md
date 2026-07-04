@@ -19,9 +19,14 @@ CleanVault is a privacy-first PDF tool website. Merge, split, extract, and rotat
 | **PDF Split** | Split a PDF into multiple files by page ranges (e.g., `1-5`, `10-20`). |
 | **Extract Pages** | Extract specific pages from a PDF (e.g., `2,5,8,10`). |
 | **Rotate PDF** | Rotate pages 90°, 180°, or 270° clockwise. |
-| **Optimize PDF** | Remove metadata and optimize PDF structure. |
+| **Optimize PDF (Remove Metadata)** | Remove metadata and optimize PDF structure (no compression). |
 | **Reorder Pages** | Drag and drop to rearrange pages in your PDF. |
 | **Remove Pages** | Delete specific pages from any PDF. |
+
+**Free tier limits:**
+- 10 operations per day
+- Maximum 50 pages per PDF
+- Single file processing (except Merge)
 
 ### Pro Features
 
@@ -29,7 +34,12 @@ CleanVault is a privacy-first PDF tool website. Merge, split, extract, and rotat
 |---------|-------------|
 | **Add Watermark** | Add text watermarks (CONFIDENTIAL, DRAFT, etc.) with custom size, opacity, rotation, and position. |
 | **Add Page Numbers** | Add page numbers to all pages (bottom-left, center, or right). |
-| **Password Protection** | ⚠️ Browser limitation: pdf-lib does not support PDF encryption. This feature outputs the PDF as-is. True encryption requires a server-side solution. |
+| **Batch Processing** | Process multiple PDFs at once with the same operation (rotate, watermark, page numbers, remove pages, extract pages). |
+| **Password Protection** | Add password to protect your PDF (browser limitation: no encryption). |
+
+**Pro removes all limits:**
+- Unlimited operations per day
+- Unlimited pages per PDF
 
 ---
 
@@ -184,11 +194,11 @@ The browser validates licenses by:
 4. Click **Reorder PDF**.
 5. `reordered.pdf` downloads automatically.
 
-### Optimize PDF
+### Optimize PDF (Remove Metadata)
 
-1. Click **Optimize PDF** on the homepage.
+1. Click **Optimize PDF (Remove Metadata)** on the homepage.
 2. Upload a PDF file.
-3. Click **Compress PDF**.
+3. Click **Optimize PDF**.
 4. `compressed.pdf` downloads with size comparison.
 
 ### Add Watermark (Pro)
@@ -208,6 +218,16 @@ The browser validates licenses by:
 4. Select position (bottom-left, center, or right).
 5. Click **Add Page Numbers**.
 6. `numbered.pdf` downloads automatically.
+
+### Batch Processing (Pro)
+
+1. Activate CleanVault Pro.
+2. Click **Batch Processing** on the homepage.
+3. Select multiple PDF files.
+4. Choose an operation: Rotate, Add Watermark, Add Page Numbers, Remove Pages, or Extract Pages.
+5. Configure the operation options.
+6. Click **Process All Files**.
+7. All processed PDFs download automatically.
 
 ---
 
@@ -308,6 +328,7 @@ cleanvault/
 │   ├── reorder.js          # Reorder pages tool
 │   ├── watermark.js        # Watermark tool (Pro)
 │   ├── page-numbers.js     # Page numbers tool (Pro)
+│   ├── batch.js            # Batch processing tool (Pro)
 │   └── remove.js           # Remove pages + password protect (Pro)
 ├── tests/                  # Automated test suite
 │   ├── pdf-tools.test.js   # 30 tests for all PDF tools

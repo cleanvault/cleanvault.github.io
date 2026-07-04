@@ -54,8 +54,24 @@ function initializeExtractTool() {
 
 async function handleExtractFile(file) {
     if (!file || !validatePDF(file)) return;
+    
+    // Check limits
+    const limitCheck = LimitsManager.canUseTool('extract');
+    if (!limitCheck.allowed) {
+        showStatus('error', limitCheck.reason);
+        return;
+    }
+    
     try {
         const info = await PDFTools.getPDFInfo(file);
+        
+        // Check page limit
+        const pageCheck = LimitsManager.canProcessFile(file, info.pageCount);
+        if (!pageCheck.allowed) {
+            showStatus('error', pageCheck.reason);
+            return;
+        }
+        
         currentFiles = [file];
         showPageInfo('extract', file, info.pageCount);
         document.getElementById('extract-pages-group').style.display = 'block';
@@ -77,6 +93,7 @@ async function performExtract() {
         setLoading(extractBtn, 'Extracting...');
         showStatus('info', 'Extracting pages... This may take a moment.');
         const result = await PDFTools.extractPages(currentFiles[0], pageNumbers);
+        LimitsManager.trackOperation();
         PDFTools.downloadFile(result.data, result.name);
         showStatus('success', 'Pages extracted successfully! Downloading...');
         setTimeout(() => {

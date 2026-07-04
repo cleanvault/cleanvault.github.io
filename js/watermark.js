@@ -81,12 +81,30 @@ function initializeWatermarkTool() {
 async function handleWatermarkFile(file) {
     if (!file) return;
     if (file.type !== 'application/pdf') { showStatus('error', 'Invalid file type. Please select a PDF file.'); return; }
+    
+    // Check Pro status
     if (typeof LicenseManager !== 'undefined' && !LicenseManager.isActivated()) {
         showStatus('error', '⚠️ This is a Pro feature. Please upgrade to CleanVault Pro to unlock watermarks and all Pro features.');
         return;
     }
+    
+    // Check limits
+    const limitCheck = LimitsManager.canUseTool('watermark');
+    if (!limitCheck.allowed) {
+        showStatus('error', limitCheck.reason);
+        return;
+    }
+    
     try {
         const info = await PDFTools.getPDFInfo(file);
+        
+        // Check page limit
+        const pageCheck = LimitsManager.canProcessFile(file, info.pageCount);
+        if (!pageCheck.allowed) {
+            showStatus('error', pageCheck.reason);
+            return;
+        }
+        
         currentFiles = [file];
         showPageInfo('watermark', file, info.pageCount);
         document.getElementById('watermark-options-group').style.display = 'block';
@@ -114,6 +132,7 @@ async function performWatermark() {
         setLoading(watermarkBtn, 'Adding Watermark...');
         showStatus('info', 'Adding watermark to all pages... This may take a moment.');
         const result = await PDFTools.watermarkPDF(currentFiles[0], options);
+        LimitsManager.trackOperation();
         PDFTools.downloadFile(result.data, result.name);
         showStatus('success', 'Watermark added successfully! Downloading...');
         setTimeout(() => {

@@ -53,6 +53,7 @@ function showTool(toolName) {
         case 'password':   content = getPasswordProtectToolHTML(); break;
         case 'pagenumbers': content = getPageNumbersToolHTML(); break;
         case 'remove':     content = getRemoveToolHTML(); break;
+        case 'batch':      content = getBatchToolHTML(); break;
         default:           content = '<p>Tool not found</p>';
     }
 
@@ -90,6 +91,7 @@ function initializeTool(toolName) {
         case 'password':   initializePasswordProtectTool(); break;
         case 'pagenumbers': initializePageNumbersTool(); break;
         case 'remove':     initializeRemoveTool(); break;
+        case 'batch':      initializeBatchTool(); break;
     }
 }
 

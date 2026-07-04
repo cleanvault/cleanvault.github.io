@@ -74,8 +74,24 @@ function initializeSplitTool() {
 
 async function handleSplitFile(file) {
     if (!file || !validatePDF(file)) return;
+    
+    // Check limits
+    const limitCheck = LimitsManager.canUseTool('split');
+    if (!limitCheck.allowed) {
+        showStatus('error', limitCheck.reason);
+        return;
+    }
+    
     try {
         const info = await PDFTools.getPDFInfo(file);
+        
+        // Check page limit
+        const pageCheck = LimitsManager.canProcessFile(file, info.pageCount);
+        if (!pageCheck.allowed) {
+            showStatus('error', pageCheck.reason);
+            return;
+        }
+        
         currentFiles = [file];
         showPageInfo('split', file, info.pageCount);
         document.getElementById('split-ranges-group').style.display = 'block';
@@ -112,6 +128,7 @@ async function performSplit() {
         setLoading(splitBtn, 'Splitting...');
         showStatus('info', 'Splitting PDF... This may take a moment.');
         const splitResults = await PDFTools.splitPDF(currentFiles[0], splitInput);
+        LimitsManager.trackOperation();
         splitResults.forEach((result, index) => {
             setTimeout(() => PDFTools.downloadFile(result.data, result.name), index * 500);
         });

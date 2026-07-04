@@ -58,8 +58,24 @@ function initializeRotateTool() {
 
 async function handleRotateFile(file) {
     if (!file || !validatePDF(file)) return;
+    
+    // Check limits
+    const limitCheck = LimitsManager.canUseTool('rotate');
+    if (!limitCheck.allowed) {
+        showStatus('error', limitCheck.reason);
+        return;
+    }
+    
     try {
         const info = await PDFTools.getPDFInfo(file);
+        
+        // Check page limit
+        const pageCheck = LimitsManager.canProcessFile(file, info.pageCount);
+        if (!pageCheck.allowed) {
+            showStatus('error', pageCheck.reason);
+            return;
+        }
+        
         currentFiles = [file];
         showPageInfo('rotate', file, info.pageCount);
         document.getElementById('rotate-options-group').style.display = 'block';
@@ -78,6 +94,7 @@ async function performRotate() {
         setLoading(rotateBtn, 'Rotating...');
         showStatus('info', 'Rotating PDF... This may take a moment.');
         const result = await PDFTools.rotatePDF(currentFiles[0], selectedRotation);
+        LimitsManager.trackOperation();
         PDFTools.downloadFile(result.data, result.name);
         showStatus('success', 'PDF rotated successfully! Downloading...');
         setTimeout(() => {

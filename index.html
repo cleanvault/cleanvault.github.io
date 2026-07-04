@@ -100,7 +100,7 @@
                     <button class="btn btn-secondary" onclick="showTool('rotate')">Rotate PDF</button>
                 </div>
 
-                <!-- Compress PDF Card -->
+                <!-- Optimize PDF Card -->
                 <div class="tool-card">
                     <div class="tool-icon">
                         <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -109,9 +109,9 @@
                             <circle cx="24" cy="32" r="2" fill="currentColor"/>
                         </svg>
                     </div>
-                    <h3>Optimize PDF</h3>
-                    <p>Remove metadata and optimize PDF structure.</p>
-                    <button class="btn btn-secondary" onclick="showTool('compress')">Optimize PDF</button>
+                    <h3>Optimize PDF (Remove Metadata)</h3>
+                    <p>Remove metadata and optimize PDF structure (no compression).</p>
+                    <button class="btn btn-secondary" onclick="showTool('compress')">Optimize PDF (Remove Metadata)</button>
                 </div>
 
                 <!-- Reorder Pages Card -->
@@ -171,6 +171,22 @@
                     <button class="btn btn-secondary" onclick="showTool('pagenumbers')">Add Page Numbers</button>
                     <button class="btn btn-upgrade" onclick="showUpgradeModal()">Upgrade to Pro</button>
                 </div>
+
+                <!-- Batch Processing Card (Pro) -->
+                <div class="tool-card pro-tool">
+                    <div class="pro-badge-card">Pro</div>
+                    <div class="tool-icon">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
+                            <path d="M16 16h16M16 24h16M16 32h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M28 16l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>Batch Processing</h3>
+                    <p>Process multiple PDFs at once with the same operation (rotate, watermark, page numbers, remove pages, extract pages).</p>
+                    <button class="btn btn-secondary" onclick="showTool('batch')">Batch Process</button>
+                    <button class="btn btn-upgrade" onclick="showUpgradeModal()">Upgrade to Pro</button>
+                </div>
             </div>
         </div>
     </section>
@@ -220,7 +236,7 @@
     <section id="activation" class="activation-section">
         <div class="container">
             <h2>Activate CleanVault Pro</h2>
-            <p>Already purchased a license? Enter your key below to unlock all Pro features including Watermarks, Page Numbers, and Password Protection.</p>
+            <p>Already purchased a license? Enter your key below to unlock all Pro features including Watermarks, Page Numbers, and Batch Processing.</p>
             <div class="activation-form">
                 <input type="text" id="license-input" placeholder="CV-PRO-XXXX-YYYYMMDD-SIG" class="license-input">
                 <button id="activate-btn" class="btn btn-primary">Activate Pro</button>
@@ -253,6 +269,7 @@
                         <li>✓ All Free PDF Tools</li>
                         <li>✓ Add Watermarks</li>
                         <li>✓ Add Page Numbers</li>
+                        <li>✓ Batch Processing</li>
                         <li>✓ Password Protection</li>
                         <li>✓ 1 year of updates</li>
                         <li>✓ Priority support</li>
@@ -334,6 +351,7 @@
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="js/pdf-tools.js"></script>
     <script src="js/license.js"></script>
+    <script src="js/limits.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/merge.js"></script>
     <script src="js/split.js"></script>
@@ -344,5 +362,4 @@
     <script src="js/watermark.js"></script>
     <script src="js/page-numbers.js"></script>
     <script src="js/remove.js"></script>
-</body>
-</html>
+    <script src="js/batch.js"></script>

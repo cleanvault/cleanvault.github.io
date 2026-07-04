@@ -54,8 +54,24 @@ function initializeReorderTool() {
 
 async function handleReorderFile(file) {
     if (!file || !validatePDF(file)) return;
+    
+    // Check limits
+    const limitCheck = LimitsManager.canUseTool('reorder');
+    if (!limitCheck.allowed) {
+        showStatus('error', limitCheck.reason);
+        return;
+    }
+    
     try {
         const info = await PDFTools.getPDFInfo(file);
+        
+        // Check page limit
+        const pageCheck = LimitsManager.canProcessFile(file, info.pageCount);
+        if (!pageCheck.allowed) {
+            showStatus('error', pageCheck.reason);
+            return;
+        }
+        
         currentFiles = [file];
         showPageInfo('reorder', file, info.pageCount);
         document.getElementById('reorder-pages-group').style.display = 'block';
@@ -107,6 +123,7 @@ async function performReorder() {
         setLoading(reorderBtn, 'Reordering...');
         showStatus('info', 'Reordering pages... This may take a moment.');
         const result = await PDFTools.reorderPDF(currentFiles[0], newOrder);
+        LimitsManager.trackOperation();
         PDFTools.downloadFile(result.data, result.name);
         showStatus('success', 'Pages reordered successfully! Downloading...');
         setTimeout(() => {

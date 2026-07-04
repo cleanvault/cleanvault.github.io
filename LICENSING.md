@@ -8,12 +8,20 @@ CleanVault is a privacy-first PDF tool that processes documents locally in your 
 
 ## Free Tier
 
-The free version includes all core PDF tools with no limits:
+The free version includes all core PDF tools with the following limits:
 
 - **PDF Merge** — Combine multiple PDFs into one
 - **PDF Split** — Split by page ranges or every N pages
 - **Extract Pages** — Extract specific pages
 - **Rotate PDF** — Rotate pages 90°, 180°, or 270°
+- **Optimize PDF (Remove Metadata)** — Remove metadata and optimize structure
+- **Reorder Pages** — Drag and drop to rearrange pages
+- **Remove Pages** — Delete specific pages
+
+**Free tier limits:**
+- 10 operations per day
+- Maximum 50 pages per PDF
+- Single file processing (except Merge)
 
 Free tools are available to everyone. No registration or account required.
 
@@ -160,26 +168,34 @@ This license system provides **deterrence against casual piracy**:
 
 ## Contact
 
-For licensing inquiries:
-- **Email:** licensing@cleanvault.com
-- **Sales:** sales@cleanvault.com
+For licensing inquiries, see the main repository.
+
+---
+
+### Pro Features
+
+| Feature | What It Does |
+|---------|-------------|
+| **Add Watermark** | Add text watermarks (CONFIDENTIAL, DRAFT, etc.) with custom size, opacity, rotation, and position. |
+| **Add Page Numbers** | Add page numbers to all pages (bottom-left, center, or right). |
+| **Batch Processing** | Process multiple PDFs at once with the same operation (rotate, watermark, page numbers, remove pages, extract pages). |
+| **Password Protection** | Add password to protect your PDF (browser limitation: no encryption). |
+
+### Free Tier Limits
+
+| Limit | Free Tier | Pro Tier |
+|-------|-----------|----------|
+| Operations per day | 10 | Unlimited |
+| Pages per PDF | 50 | Unlimited |
+| Multi-file processing | Merge only | All tools |
+| Batch Processing | Not available | Available |
 
 ---
 
 ## License Generation
 
-Licenses are generated using the included Node.js CLI tool:
-
-```bash
-# Generate a Personal Pro license
-node tools/generate-license.js customer@ pro 2027-06-28
-
-# Generate a Corporate license
-node tools/generate-license.js customer@ corp 2027-06-28
-```
-
+Licenses are generated using the included Node.js CLI tool (internal use only).
 The generator creates a cryptographically signed license key that can be validated entirely in the browser. No database or backend service is required.
 
----
 
 *CleanVault — Your files never leave your computer.*

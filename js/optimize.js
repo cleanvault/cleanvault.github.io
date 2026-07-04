@@ -5,8 +5,8 @@
 function getCompressToolHTML() {
     return `
         <div class="tool-header">
-            <h2>Optimize PDF</h2>
-            <p>Clean up your PDF by removing metadata and optimizing structure</p>
+            <h2>Optimize PDF (Remove Metadata)</h2>
+            <p>Remove metadata and optimize PDF structure (no compression).</p>
         </div>
         <div class="upload-area" id="compress-upload-area">
             <div class="upload-icon">
@@ -17,7 +17,7 @@ function getCompressToolHTML() {
                 </svg>
             </div>
             <p><strong>Click to select a PDF file</strong> or drag and drop</p>
-            <p class="form-hint">Select one PDF file to compress</p>
+            <p class="form-hint">Select one PDF file to optimize</p>
             <input type="file" id="compress-file-input" accept=".pdf">
         </div>
         <div class="page-info" id="compress-info" style="display: none;">
@@ -25,7 +25,7 @@ function getCompressToolHTML() {
             <strong>Original Size:</strong> <span id="compress-original-size"></span>
         </div>
         <div class="tool-actions" id="compress-actions" style="display: none;">
-            <button class="btn btn-primary" id="compress-btn">Compress PDF</button>
+            <button class="btn btn-primary" id="compress-btn">Optimize PDF</button>
             <button class="btn btn-secondary" id="clear-compress-btn">Clear</button>
         </div>
         <div class="status" id="compress-status"></div>
@@ -49,7 +49,24 @@ function initializeCompressTool() {
 
 async function handleCompressFile(file) {
     if (!file || !validatePDF(file)) return;
+    
+    // Check limits
+    const limitCheck = LimitsManager.canUseTool('compress');
+    if (!limitCheck.allowed) {
+        showStatus('error', limitCheck.reason);
+        return;
+    }
+    
     try {
+        const info = await PDFTools.getPDFInfo(file);
+        
+        // Check page limit
+        const pageCheck = LimitsManager.canProcessFile(file, info.pageCount);
+        if (!pageCheck.allowed) {
+            showStatus('error', pageCheck.reason);
+            return;
+        }
+        
         currentFiles = [file];
         document.getElementById('compress-file-name').textContent = file.name;
         document.getElementById('compress-original-size').textContent = PDFTools.formatFileSize(file.size);
@@ -64,12 +81,13 @@ async function performCompress() {
     if (!currentFiles[0]) { showStatus('error', 'Please select a PDF file first'); return; }
     const compressBtn = document.getElementById('compress-btn');
     try {
-        setLoading(compressBtn, 'Compressing...');
-        showStatus('info', 'Compressing PDF... This may take a moment.');
+        setLoading(compressBtn, 'Optimizing...');
+        showStatus('info', 'Optimizing PDF... This may take a moment.');
         const result = await PDFTools.compressPDF(currentFiles[0]);
+        LimitsManager.trackOperation();
         const savings = ((1 - result.compressedSize / result.originalSize) * 100).toFixed(1);
         PDFTools.downloadFile(result.data, result.name);
-        showStatus('success', `Compressed! ${savings}% smaller (${PDFTools.formatFileSize(result.originalSize)} → ${PDFTools.formatFileSize(result.compressedSize)}). Downloading...`);
+        showStatus('success', `Optimized! ${savings}% smaller (${PDFTools.formatFileSize(result.originalSize)} → ${PDFTools.formatFileSize(result.compressedSize)}). Downloading...`);
         setTimeout(() => {
             currentFiles = [];
             document.getElementById('compress-info').style.display = 'none';
@@ -79,6 +97,6 @@ async function performCompress() {
     } catch (error) {
         showStatus('error', error.message);
     } finally {
-        unsetLoading(compressBtn, 'Compress PDF');
+        unsetLoading(compressBtn, 'Optimize PDF');
     }
 }
