@@ -1,1 +1,0 @@
-// This file is intentionally empty - PDF Redaction was replaced with Batch Processing

@@ -85,10 +85,8 @@ Unlock additional features with a CleanVault Pro license.
 
 | Plan | Price | Best For |
 |------|-------|----------|
-| **Founding Member (Personal)** | $19.99/year | First 100 customers (best value!) |
-| **Personal** | $29.99/year | Individual users |
-| **Founding Member (Corporate)** | $79.99/year | First 100 teams |
-| **Corporate** | $99.99/year | Teams up to 10 users |
+| | **Personal** | $29.99/year | Individual users |
+| | **Corporate** | $99.99/year | Teams up to 10 users |
 
 **All plans include:** All free tools + Watermark + Page Numbers + Password Protection + 1 year of updates + priority support
 
