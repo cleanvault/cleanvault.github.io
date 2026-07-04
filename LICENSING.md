@@ -158,9 +158,8 @@ This license system provides **deterrence against casual piracy**:
 
 | Plan | Price | Best For |
 |------|-------|----------|
-| **Founding Member** | $19.99/year | First 100 customers (best value!) |
-| **Personal** | $29.99/year | Individual users |
-| **Corporate** | $99.99/year | Teams up to 10 users |
+| | **Personal** | $29.99/year | Individual users |
+| | **Corporate** | $99.99/year | Teams up to 10 users |
 
 **All plans include:** 1 year of Pro features, 1 year of updates, priority support
 
@@ -179,7 +178,6 @@ For licensing inquiries, see the main repository.
 | **Add Watermark** | Add text watermarks (CONFIDENTIAL, DRAFT, etc.) with custom size, opacity, rotation, and position. |
 | **Add Page Numbers** | Add page numbers to all pages (bottom-left, center, or right). |
 | **Batch Processing** | Process multiple PDFs at once with the same operation (rotate, watermark, page numbers, remove pages, extract pages). |
-| **Password Protection** | Add password to protect your PDF (browser limitation: no encryption). |
 
 ### Free Tier Limits
 

@@ -1,6 +1,5 @@
 /**
  * CleanVault - Remove Pages Tool Module
- * Also contains Password Protect (Pro) since both work on page deletion/security
  */
 
 function getRemoveToolHTML() {
@@ -37,44 +36,6 @@ function getRemoveToolHTML() {
         <div class="status" id="remove-status"></div>
     `;
 }
-
-function getPasswordProtectToolHTML() {
-    return `
-        <div class="tool-header">
-            <h2>Password Protect PDF <span class="pro-label">Pro</span></h2>
-            <p>⚠️ Browser limitation: pdf-lib does not support PDF encryption. This feature outputs the PDF as-is. True encryption requires a server-side solution.</p>
-        </div>
-        <div class="upload-area" id="password-upload-area">
-            <div class="upload-icon">
-                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
-                    <path d="M24 16v8l6 6M24 32a8 8 0 100-16 8 8 0 000 16z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-            <p><strong>Click to select a PDF file</strong> or drag and drop</p>
-            <p class="form-hint">Select one PDF file to protect</p>
-            <input type="file" id="password-file-input" accept=".pdf">
-        </div>
-        <div class="page-info" id="password-info" style="display: none;">
-            <strong>File:</strong> <span id="password-file-name"></span><br>
-            <strong>Total Pages:</strong> <span id="password-total-pages"></span>
-        </div>
-        <div class="form-group" id="password-options-group" style="display: none;">
-            <label for="password-input">Password</label>
-            <input type="password" id="password-input" placeholder="Enter password to protect PDF">
-            <p class="form-hint">Choose a strong password. You will need this to open the PDF.</p>
-        </div>
-        <div class="tool-actions" id="password-actions" style="display: none;">
-            <button class="btn btn-primary" id="password-btn">Protect PDF</button>
-            <button class="btn btn-secondary" id="clear-password-btn">Clear</button>
-        </div>
-        <div class="status" id="password-status"></div>
-    `;
-}
-
-// ============================================
-// REMOVE PAGES
-// ============================================
 
 function initializeRemoveTool() {
     const fileInput = document.getElementById('remove-file-input');
@@ -148,70 +109,5 @@ async function performRemovePages() {
         showStatus('error', error.message);
     } finally {
         unsetLoading(removeBtn, 'Remove Pages');
-    }
-}
-
-// ============================================
-// PASSWORD PROTECT (Pro)
-// ============================================
-
-function initializePasswordProtectTool() {
-    const fileInput = document.getElementById('password-file-input');
-    const protectBtn = document.getElementById('password-btn');
-    const clearBtn = document.getElementById('clear-password-btn');
-
-    setupUploadArea('password-upload-area', 'password-file-input', (file) => handlePasswordFile(file));
-    protectBtn.addEventListener('click', async () => await performPasswordProtect());
-    clearBtn.addEventListener('click', () => {
-        currentFiles = [];
-        document.getElementById('password-info').style.display = 'none';
-        document.getElementById('password-options-group').style.display = 'none';
-        document.getElementById('password-actions').style.display = 'none';
-        fileInput.value = '';
-    });
-}
-
-async function handlePasswordFile(file) {
-    if (!file) return;
-    if (file.type !== 'application/pdf') { showStatus('error', 'Invalid file type. Please select a PDF file.'); return; }
-    if (typeof LicenseManager !== 'undefined' && !LicenseManager.isActivated()) {
-        showStatus('error', '⚠️ This is a Pro feature. Please upgrade to CleanVault Pro to unlock password protection and all Pro features.');
-        return;
-    }
-    try {
-        const info = await PDFTools.getPDFInfo(file);
-        currentFiles = [file];
-        showPageInfo('password', file, info.pageCount);
-        document.getElementById('password-options-group').style.display = 'block';
-        document.getElementById('password-actions').style.display = 'flex';
-    } catch (error) {
-        showStatus('error', 'Failed to read PDF. Please ensure it is a valid, non-corrupted PDF file.');
-    }
-}
-
-async function performPasswordProtect() {
-    if (!currentFiles[0]) { showStatus('error', 'Please select a PDF file first'); return; }
-    const password = document.getElementById('password-input').value;
-    if (!password) { showStatus('error', 'Please enter a password'); return; }
-
-    const protectBtn = document.getElementById('password-btn');
-    try {
-        setLoading(protectBtn, 'Protecting...');
-        showStatus('info', 'Protecting PDF... This may take a moment.');
-        const result = await PDFTools.passwordProtectPDF(currentFiles[0], password);
-        PDFTools.downloadFile(result.data, result.name);
-        showStatus('success', 'PDF protected successfully! Downloading...');
-        setTimeout(() => {
-            currentFiles = [];
-            document.getElementById('password-info').style.display = 'none';
-            document.getElementById('password-options-group').style.display = 'none';
-            document.getElementById('password-actions').style.display = 'none';
-            document.getElementById('password-file-input').value = '';
-            document.getElementById('password-input').value = '';
-        }, 2000);
-    } catch (error) {
-        showStatus('error', error.message);
-    } finally {
-        unsetLoading(protectBtn, 'Protect PDF');
     }
 }

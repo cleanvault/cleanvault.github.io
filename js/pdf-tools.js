@@ -407,48 +407,6 @@ async function removePDFPages(pdfFile, pagesToRemove) {
 }
 
 /**
- * PROTECT PLACEHOLDER: pdf-lib does not support PDF encryption in the browser.
- * This function returns the PDF as-is with an informational comment.
- * True PDF password protection requires a server-side library or a different
- * PDF library with encryption support (e.g., a WASM-based library).
- * 
- * @param {File} pdfFile - The PDF file to protect
- * @param {string} password - The password to encrypt with (ignored - see above)
- * @returns {Promise<{name: string, data: Uint8Array}>}
- */
-async function passwordProtectPDF(pdfFile, password) {
-    const PDFLib = ensurePDFLib();
-    
-    try {
-        if (!password || password.length < 1) {
-            throw new Error('Password is required');
-        }
-        
-        // Read the PDF file
-        const arrayBuffer = await pdfFile.arrayBuffer();
-        const pdf = await PDFLib.PDFDocument.load(arrayBuffer);
-        
-        // pdf-lib does NOT support encryption. The PDF is saved as-is.
-        // This is a documented limitation - no browser-only library
-        // supports client-side PDF encryption without a backend server.
-        const protectedPdfBytes = await pdf.save();
-        
-        // Create filename
-        const baseName = pdfFile.name.replace('.pdf', '');
-        const fileName = `${baseName}-protected.pdf`;
-        
-        return {
-            name: fileName,
-            data: protectedPdfBytes
-        };
-        
-    } catch (error) {
-        console.error('Error protecting PDF:', error);
-        throw new Error('Failed to protect PDF. Please ensure it is a valid PDF.');
-    }
-}
-
-/**
  * Add page numbers to all pages in a PDF
  * @param {File} pdfFile - The PDF file to add page numbers to
  * @param {Object} options - Page number options
@@ -805,7 +763,6 @@ if (typeof window !== 'undefined') {
         reorderPDF,
         compressPDF,
         watermarkPDF,
-        passwordProtectPDF,
         addPageNumbers,
         downloadFile,
         formatFileSize

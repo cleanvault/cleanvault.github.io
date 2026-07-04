@@ -1,12 +1,6 @@
 # Dependencies
 node_modules/
 package-lock.json
-package.json
-
-# Internal tools and tests
-tools/
-tests/
-docs/
 
 # Test files
 test-*.js

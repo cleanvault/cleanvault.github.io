@@ -9,9 +9,6 @@
 let currentFiles = [];
 let currentTool = null;
 
-// Stripe checkout URL
-const STRIPE_CHECKOUT_URL = 'https://buy.stripe.com/your-stripe-link-here';
-
 /**
  * Initialize the application when DOM is loaded
  */
@@ -50,7 +47,6 @@ function showTool(toolName) {
         case 'compress':   content = getCompressToolHTML(); break;
         case 'reorder':    content = getReorderToolHTML(); break;
         case 'watermark':  content = getWatermarkToolHTML(); break;
-        case 'password':   content = getPasswordProtectToolHTML(); break;
         case 'pagenumbers': content = getPageNumbersToolHTML(); break;
         case 'remove':     content = getRemoveToolHTML(); break;
         case 'batch':      content = getBatchToolHTML(); break;
@@ -88,7 +84,6 @@ function initializeTool(toolName) {
         case 'compress':   initializeCompressTool(); break;
         case 'reorder':    initializeReorderTool(); break;
         case 'watermark':  initializeWatermarkTool(); break;
-        case 'password':   initializePasswordProtectTool(); break;
         case 'pagenumbers': initializePageNumbersTool(); break;
         case 'remove':     initializeRemoveTool(); break;
         case 'batch':      initializeBatchTool(); break;
@@ -354,12 +349,12 @@ function showActivationStatus(message, type) {
 // UPGRADE HANDLER
 // ============================================
 
-function handleUpgrade() {
-    window.open(STRIPE_CHECKOUT_URL, '_blank');
+function showUpgradeModal() {
+    // Redirect to pricing section where Stripe links are located
+    document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' });
 }
 
 // Make globally available for onclick handlers
 window.showTool = showTool;
 window.hideTool = hideTool;
-window.handleUpgrade = handleUpgrade;
-window.showUpgradeModal = handleUpgrade;
+window.showUpgradeModal = showUpgradeModal;

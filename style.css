@@ -773,11 +773,6 @@ body {
     box-shadow: var(--shadow-xl);
 }
 
-.pricing-card.founding-member {
-    border-color: #fbbf24;
-    background: linear-gradient(180deg, #fffbeb 0%, var(--color-white) 100%);
-}
-
 .pricing-card.corporate {
     border-color: var(--color-navy);
 }
@@ -878,61 +873,6 @@ body {
     margin-top: 16px;
     font-size: 14px;
     color: var(--color-gray);
-}
-
-/* Founding Member Ribbon */
-.founding-ribbon {
-    margin-top: 16px;
-    padding: 12px;
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-    border: 1px solid #f59e0b;
-    border-radius: 8px;
-    text-align: center;
-}
-
-.founding-ribbon-label {
-    display: inline-block;
-    background-color: #f59e0b;
-    color: #78350f;
-    padding: 3px 12px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
-}
-
-.founding-ribbon-content {
-    margin-top: 4px;
-}
-
-.founding-price {
-    font-size: 20px;
-    font-weight: 800;
-    color: #92400e;
-}
-
-.founding-note {
-    display: block;
-    font-size: 12px;
-    color: #92400e;
-    margin-top: 2px;
-}
-
-.corporate-ribbon {
-    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-    border-color: #6366f1;
-}
-
-.corporate-ribbon .founding-ribbon-label {
-    background-color: #6366f1;
-    color: #ffffff;
-}
-
-.corporate-ribbon .founding-price,
-.corporate-ribbon .founding-note {
-    color: #3730a3;
 }
 
 /* Upgrade Button */
