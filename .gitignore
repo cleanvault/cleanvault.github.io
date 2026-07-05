@@ -3,8 +3,20 @@ node_modules/
 package-lock.json
 
 # Test files
+tests/
 test-*.js
 test*.pdf
+*.test.js
+*.spec.js
+
+# Development tools
+tools/
+
+# Documentation (not for production)
+docs/
+AUDIT_*.md
+PRO_*.md
+package.json
 
 # IDE
 .vscode/

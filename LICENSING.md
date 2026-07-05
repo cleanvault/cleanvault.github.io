@@ -14,7 +14,7 @@ The free version includes all core PDF tools with the following limits:
 - **PDF Split** — Split by page ranges or every N pages
 - **Extract Pages** — Extract specific pages
 - **Rotate PDF** — Rotate pages 90°, 180°, or 270°
-- **Optimize PDF (Remove Metadata)** — Remove metadata and optimize structure
+- **Remove Metadata** — Remove metadata (title, author, keywords, etc.)
 - **Reorder Pages** — Drag and drop to rearrange pages
 - **Remove Pages** — Delete specific pages
 
@@ -34,6 +34,7 @@ For individual users who need more control over their PDFs.
 **Includes all Free features plus:**
 - Add Watermark — Add text watermarks to all pages
 - Add Page Numbers — Add page numbers to all pages
+- Batch Processing — Process multiple PDFs at once
 - All future Pro features as they're released
 
 **License terms:**

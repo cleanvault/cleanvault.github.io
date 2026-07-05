@@ -19,7 +19,7 @@ CleanVault is a privacy-first PDF tool website. Merge, split, extract, and rotat
 | **PDF Split** | Split a PDF into multiple files by page ranges (e.g., `1-5`, `10-20`). |
 | **Extract Pages** | Extract specific pages from a PDF (e.g., `2,5,8,10`). |
 | **Rotate PDF** | Rotate pages 90°, 180°, or 270° clockwise. |
-| **Optimize PDF (Remove Metadata)** | Remove metadata and optimize PDF structure (no compression). |
+| **Remove Metadata** | Remove metadata (title, author, keywords, etc.) from your PDF. |
 | **Reorder Pages** | Drag and drop to rearrange pages in your PDF. |
 | **Remove Pages** | Delete specific pages from any PDF. |
 
@@ -35,7 +35,6 @@ CleanVault is a privacy-first PDF tool website. Merge, split, extract, and rotat
 | **Add Watermark** | Add text watermarks (CONFIDENTIAL, DRAFT, etc.) with custom size, opacity, rotation, and position. |
 | **Add Page Numbers** | Add page numbers to all pages (bottom-left, center, or right). |
 | **Batch Processing** | Process multiple PDFs at once with the same operation (rotate, watermark, page numbers, remove pages, extract pages). |
-| **Password Protection** | Add password to protect your PDF (browser limitation: no encryption). |
 
 **Pro removes all limits:**
 - Unlimited operations per day
@@ -76,7 +75,6 @@ Unlock additional features with a CleanVault Pro license.
 
 - **Add Watermarks** — Text watermarks with custom size, opacity, rotation, and position
 - **Add Page Numbers** — Page numbers at bottom-left, center, or right
-- **Password Protection** — Output PDF with password metadata (see limitation note)
 - **Future tools** — All upcoming Pro features included
 
 ### Pricing Plans
@@ -88,7 +86,7 @@ Unlock additional features with a CleanVault Pro license.
 | | **Personal** | $29.99/year | Individual users |
 | | **Corporate** | $99.99/year | Teams up to 10 users |
 
-**All plans include:** All free tools + Watermark + Page Numbers + Password Protection + 1 year of updates + priority support
+**All plans include:** All free tools + Watermark + Page Numbers + 1 year of updates + priority support
 
 [See full licensing details →](LICENSING.md)
 
@@ -192,12 +190,12 @@ The browser validates licenses by:
 4. Click **Reorder PDF**.
 5. `reordered.pdf` downloads automatically.
 
-### Optimize PDF (Remove Metadata)
+### Remove Metadata
 
-1. Click **Optimize PDF (Remove Metadata)** on the homepage.
+1. Click **Remove Metadata** on the homepage.
 2. Upload a PDF file.
-3. Click **Optimize PDF**.
-4. `compressed.pdf` downloads with size comparison.
+3. Click **Remove Metadata**.
+4. `metadata-removed.pdf` downloads with metadata removed.
 
 ### Add Watermark (Pro)
 
@@ -326,8 +324,7 @@ cleanvault/
 │   ├── reorder.js          # Reorder pages tool
 │   ├── watermark.js        # Watermark tool (Pro)
 │   ├── page-numbers.js     # Page numbers tool (Pro)
-│   ├── batch.js            # Batch processing tool (Pro)
-│   └── remove.js           # Remove pages + password protect (Pro)
+│   └── remove.js           # Remove pages tool
 ├── tests/                  # Automated test suite
 │   ├── pdf-tools.test.js   # 30 tests for all PDF tools
 │   ├── license.test.js     # 16 tests for license generation
