@@ -1,6 +1,7 @@
 # Dependencies
 node_modules/
 package-lock.json
+package.json
 
 # Test files
 tests/
@@ -16,7 +17,6 @@ tools/
 docs/
 AUDIT_*.md
 PRO_*.md
-package.json
 
 # IDE
 .vscode/
