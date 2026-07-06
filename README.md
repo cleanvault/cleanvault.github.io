@@ -259,7 +259,7 @@ Yes. Your license key works on any device. Just paste it into the activation box
 
 ### How do I get support?
 
-Email: 
+For any issues or questions, please check the documentation or open an issue on GitHub.
 
 ---
 
@@ -274,7 +274,7 @@ cd cleanvault
 python3 -m http.server 8000
 
 # Open in browser
-open https://cleanvault.github.io
+open http://localhost:8000
 ```
 
 ---
@@ -291,21 +291,6 @@ open https://cleanvault.github.io
 
 ---
 
-## 🧪 Running Tests
-
-```bash
-# Install test dependencies
-npm install
-
-# Generate test fixtures
-node tests/generate-fixtures.js
-
-# Run all tests
-npm test
-```
-
----
-
 ## 📁 Project Structure
 
 ```
@@ -315,32 +300,25 @@ cleanvault/
 ├── js/
 │   ├── pdf-tools.js        # Core PDF manipulation functions
 │   ├── license.js          # Pro license management system
+│   ├── limits.js           # Usage limits for Free vs Pro tiers
 │   ├── ui.js               # Shared UI, tool switching, drag-and-drop
 │   ├── merge.js            # Merge PDF tool
 │   ├── split.js            # Split PDF tool
 │   ├── extract.js          # Extract pages tool
 │   ├── rotate.js           # Rotate PDF tool
-│   ├── optimize.js         # Optimize/compress PDF tool
+│   ├── remove-metadata.js  # Remove metadata tool
 │   ├── reorder.js          # Reorder pages tool
 │   ├── watermark.js        # Watermark tool (Pro)
 │   ├── page-numbers.js     # Page numbers tool (Pro)
-│   └── remove.js           # Remove pages tool
-├── tests/                  # Automated test suite
-│   ├── pdf-tools.test.js   # 30 tests for all PDF tools
-│   ├── license.test.js     # 16 tests for license generation
-│   ├── license-security.test.js # 32 tests for license security
-│   ├── generate-fixtures.js
-│   └── fixtures/           # Test PDF files
+│   ├── remove.js           # Remove pages tool
+│   └── batch.js            # Batch processing tool (Pro)
 ├── tools/                  # License generator (Node.js CLI)
-│   ├── generate-license.js # CLI tool for generating license keys
-│   ├── licenses.json       # Stored generated licenses
-│   └── email-template.txt  # Email template for customers
+│   └── generate-license.js # CLI tool for generating license keys
 ├── assets/
 │   └── logo.svg            # SVG logo
-├── package.json
-├── package-lock.json
 ├── .nojekyll               # Prevents Jekyll processing on GitHub Pages
-└── .gitignore
+├── .gitignore
+└── README.md
 ```
 
 ---
@@ -353,8 +331,7 @@ MIT License — free for personal and commercial use.
 
 ## 📬 Contact
 
-- **Support:** 
-- **Website:** https://cleanvault.com
+For inquiries, please visit our GitHub repository.
 
 ---
 

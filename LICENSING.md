@@ -41,7 +41,7 @@ For individual users who need more control over their PDFs.
 - 1 user
 - Personal and business use
 - Unlimited devices (same user)
-- Lifetime updates included
+- 1 year of Pro features and updates
 - Self-service activation via license key
 - Annual subscription — billed yearly
 
@@ -55,12 +55,13 @@ For teams and businesses that need multiple licenses.
 - Up to 10 licensed users
 - Volume licensing
 - Priority support
-- Lifetime updates
+- 1 year of Pro features and updates
 
 **License terms:**
 - 10 users
 - Commercial use allowed
 - Team license management
+- 1 year of Pro features and updates
 - Annual subscription — billed yearly
 
 ---
@@ -100,16 +101,16 @@ CleanVault uses a **self-contained, cryptographically signed license key system*
 
 Each license key is self-contained and cryptographically signed:
 
-**Format:** `CV-PRO-{VERSION}{PLAN}-{RANDOM}-{YYYYMMDD}-{SIG}`
+**Format:** `CV-PRO-{VERSION}{PLAN}-{RANDOM}-{YYYYMMDD}{SIG}`
 
-**Example:** `CV-PRO-01PRO-A1B2C3D4-20271231-ABCDEF1234567890`
+**Example:** `CV-PRO-01PRO-A1B2C3D4-20271231ABCDEF1234567890`
 
 **Components:**
 - **VERSION** (2 chars): License version (currently "01")
-- **PLAN** (3 chars): Plan type ("PRO" or "CORP")
+- **PLAN** (3 chars): Plan type ("PRO" or "COR")
 - **RANDOM** (8 hex chars): Unique identifier
 - **YYYYMMDD** (8 chars): Expiration date
-- **SIG** (16 hex chars): Cryptographic signature
+- **SIG** (16 hex chars): Cryptographic signature (concatenated directly after expiry, no dash)
 
 ### How Validation Works
 
@@ -117,7 +118,7 @@ The browser validates licenses without any server communication:
 
 1. **Decode** — Parse the license key structure
 2. **Verify version** — Check license version compatibility
-3. **Verify plan** — Validate plan type (PRO or CORP)
+3. **Verify plan** — Validate plan type (PRO or COR)
 4. **Check expiry** — Ensure license has not expired
 5. **Verify signature** — Cryptographically verify the key has not been tampered with
 
@@ -162,13 +163,13 @@ This license system provides **deterrence against casual piracy**:
 | | **Personal** | $29.99/year | Individual users |
 | | **Corporate** | $99.99/year | Teams up to 10 users |
 
-**All plans include:** 1 year of Pro features, 1 year of updates, priority support
+**All plans include:** 1 year of Pro features and updates, priority support
 
 ---
 
 ## Contact
 
-For licensing inquiries, see the main repository.
+For licensing inquiries, please visit our GitHub repository.
 
 ---
 

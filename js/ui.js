@@ -44,7 +44,7 @@ function showTool(toolName) {
         case 'split':      content = getSplitToolHTML(); break;
         case 'extract':    content = getExtractToolHTML(); break;
         case 'rotate':     content = getRotateToolHTML(); break;
-        case 'compress':   content = getCompressToolHTML(); break;
+        case 'compress':   content = getRemoveMetadataToolHTML(); break;
         case 'reorder':    content = getReorderToolHTML(); break;
         case 'watermark':  content = getWatermarkToolHTML(); break;
         case 'pagenumbers': content = getPageNumbersToolHTML(); break;
@@ -81,7 +81,7 @@ function initializeTool(toolName) {
         case 'split':      initializeSplitTool(); break;
         case 'extract':    initializeExtractTool(); break;
         case 'rotate':     initializeRotateTool(); break;
-        case 'compress':   initializeCompressTool(); break;
+        case 'compress':   initializeRemoveMetadataTool(); break;
         case 'reorder':    initializeReorderTool(); break;
         case 'watermark':  initializeWatermarkTool(); break;
         case 'pagenumbers': initializePageNumbersTool(); break;

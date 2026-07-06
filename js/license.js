@@ -19,10 +19,9 @@ const LicenseManager = (function() {
     // Secret key for signature generation (matches tools/generate-license.js)
     // Embedded in client code - provides deterrence against casual bypass.
     const SECRET_KEY = 'CleanVault-Pro-License-Secret-2024-Secure-Key';
-    const CURRENT_VERSION = '01';
     
-    // Valid plans
-    const VALID_PLANS = ['PRO', 'CORP'];
+    // Valid plan suffixes (extracted from 5-char version+plan block)
+    const VALID_PLAN_SUFFIXES = ['PRO', 'COR'];
     
     /**
      * Generate a simple hash-based signature (must match tools/generate-license.js)
@@ -94,27 +93,27 @@ const LicenseManager = (function() {
     
     /**
      * Validate a license key with cryptographic verification
-     * License key format: CV-PRO-{VERSION}{PLAN}{RANDOM}-{YYYYMMDD}-{SIG}
+     * License key format: CV-PRO-XXXXX-XXXXXXXX-YYYYMMDDSSSSSSSSSSSSSSSS
      *   - CV-PRO: Prefix
-     *   - VERSION: 2 chars (e.g., "01")
-     *   - PLAN: 3 chars (e.g., "PRO " or "CORP")
-     *   - RANDOM: 8 hex chars (unique ID)
-     *   - YYYYMMDD: Expiry date (8 chars)
-     *   - SIG: Signature (16 chars)
+     *   - XXXXX: 5 chars version+plan (e.g., "01PRO" or "01COR")
+     *   - XXXXXXXX: 8 uppercase hex chars (random)
+     *   - YYYYMMDD: 8 digits (expiry date)
+     *   - SSSSSSSSSSSSSSSS: 16 uppercase hex chars (signature)
+     * split('-') always produces exactly 5 parts
+     * part[4] = [8-digit expiry][16-char signature] (24 chars, NO dash)
      * 
-     * Example: CV-PRO-01PROA1B2C3D4-20271231-ABCDEF1234567890
+     * Example: CV-PRO-01PRO-A1B2C3D4-20271231ABCDEF1234567890
      * 
      * @param {string} licenseKey - The license key to validate
      * @param {string} email - Email for signature verification (optional)
-     * @returns {Object} - Validation result with success, message, plan, expiry, version
+     * @returns {Object} - Validation result with success, message, plan, expiry
      */
     function validateLicense(licenseKey, email) {
         const result = {
             valid: false,
             reason: null,
             plan: null,
-            expiry: null,
-            version: null
+            expiry: null
         };
         
         if (!licenseKey || typeof licenseKey !== 'string') {
@@ -130,41 +129,34 @@ const LicenseManager = (function() {
             return result;
         }
         
-        // Parse license: CV-PRO-VERSIONPLAN-RANDOM-YYYYMMDD-SIG
+        // Parse license: CV-PRO-VERSIONPLAN-RANDOM8-EXPIRY8SIG16
         const parts = trimmed.split('-');
         if (parts.length !== 5) {
             result.reason = 'Invalid license structure';
             return result;
         }
         
-        const versionPlan = parts[2]; // e.g., "01PRO" or "01CORP"
+        const versionPlanBlock = parts[2]; // 5 chars: version + plan (e.g., "01PRO")
         const randomPart = parts[3]; // 8 hex chars
         const expirySigPart = parts[4]; // YYYYMMDD + SIG = 24 chars
         
-        // Validate version+plan part (5 chars: 2 version + 3 plan)
-        if (versionPlan.length !== 5) {
+        // Validate version+plan block (must be exactly 5 chars)
+        if (versionPlanBlock.length !== 5) {
             result.reason = 'Invalid license format';
             return result;
         }
         
-        const version = versionPlan.substring(0, 2);
-        const plan = versionPlan.substring(2, 5);
-        
-        // Validate version
-        if (version !== CURRENT_VERSION) {
-            result.reason = `Unsupported license version (expected ${CURRENT_VERSION})`;
-            result.version = version;
-            return result;
-        }
+        // Extract plan suffix (last 3 chars of version+plan block)
+        const planPart = versionPlanBlock.substring(versionPlanBlock.length - 3); // Get last 3 chars
         
         // Validate plan
-        if (!VALID_PLANS.includes(plan)) {
+        if (!VALID_PLAN_SUFFIXES.includes(planPart)) {
             result.reason = 'Invalid license plan';
-            result.plan = plan;
+            result.plan = planPart;
             return result;
         }
         
-        // Validate random part (8 hex chars)
+        // Validate random part (8 uppercase hex chars)
         if (!/^[A-F0-9]{8}$/.test(randomPart)) {
             result.reason = 'Invalid license key';
             return result;
@@ -178,23 +170,16 @@ const LicenseManager = (function() {
         
         const expiryStr = expirySigPart.substring(0, 8);
         const signature = expirySigPart.substring(8, 24);
-        const remainder = expirySigPart.substring(24);
         
-        // Validate expiry format
+        // Validate expiry format (must be 8 digits)
         if (!/^\d{8}$/.test(expiryStr)) {
             result.reason = 'Invalid expiry date format';
             return result;
         }
         
-        // Validate signature format (must be uppercase hex)
+        // Validate signature format (must be 16 uppercase hex chars)
         if (!/^[A-F0-9]{16}$/.test(signature)) {
             result.reason = 'Invalid signature format';
-            return result;
-        }
-        
-        // Check for extra data (tampering detection)
-        if (remainder.length > 0) {
-            result.reason = 'License key appears tampered with';
             return result;
         }
         
@@ -202,25 +187,22 @@ const LicenseManager = (function() {
         if (!validateExpiry(expiryStr)) {
             result.reason = 'License has expired';
             result.expiry = expiryStr;
-            result.plan = plan;
-            result.version = version;
+            result.plan = planPart;
             return result;
         }
         
-        // Verify signature covers: version + plan + random + expiry + email
-        const dataToVerify = `${version}|${plan}|${randomPart}|${expiryStr}|${email || ''}`;
+        // Verify signature covers: versionPlan|random|expiry (email-independent)
+        const dataToVerify = `${versionPlanBlock}|${randomPart}|${expiryStr}`;
         if (!verifySignature(dataToVerify, signature)) {
             result.reason = 'License key signature is invalid';
-            result.plan = plan;
-            result.version = version;
+            result.plan = planPart;
             result.expiry = expiryStr;
             return result;
         }
         
         result.valid = true;
-        result.plan = plan;
+        result.plan = planPart;
         result.expiry = expiryStr;
-        result.version = version;
         result.reason = null;
         
         return result;
@@ -250,9 +232,8 @@ const LicenseManager = (function() {
             localStorage.setItem(STORAGE_LICENSE_KEY, licenseKey.trim());
             localStorage.setItem(STORAGE_KEY + '_plan', validation.plan);
             localStorage.setItem(STORAGE_KEY + '_expiry', validation.expiry);
-            localStorage.setItem(STORAGE_KEY + '_version', validation.version);
             
-            const planName = validation.plan === 'CORP' ? 'Corporate' : 'Personal';
+            const planName = validation.plan === 'COR' ? 'Corporate' : 'Personal';
             
             return {
                 success: true,
@@ -279,7 +260,6 @@ const LicenseManager = (function() {
             localStorage.removeItem(STORAGE_LICENSE_KEY);
             localStorage.removeItem(STORAGE_KEY + '_plan');
             localStorage.removeItem(STORAGE_KEY + '_expiry');
-            localStorage.removeItem(STORAGE_KEY + '_version');
             return true;
         } catch (error) {
             console.error('Error deactivating license:', error);
@@ -313,7 +293,7 @@ const LicenseManager = (function() {
     
     /**
      * Get license plan
-     * @returns {string|null} - Plan (PRO or CORP) or null
+     * @returns {string|null} - Plan (PRO  or CORP) or null
      */
     function getPlan() {
         try {
