@@ -405,12 +405,12 @@
             
             // Update plan badge
             const planBadge = document.getElementById('plan-badge');
-            planBadge.textContent = plan === 'corp' ? 'Corporate Plan' : 'Personal Pro';
+            planBadge.textContent = plan === 'corp' ? 'Corporate Pro' : 'Personal Pro';
             
             // Update expiry info
             const expiryInfo = document.getElementById('expiry-info');
             expiryInfo.innerHTML = `
-                <strong>Plan:</strong> ${plan === 'corp' ? 'Corporate' : 'Personal Pro'} | 
+                <strong>Plan:</strong> ${plan === 'corp' ? 'Corporate Pro' : 'Personal Pro'} | 
                 <strong>Expires:</strong> ${formatDate(expiryDate.toISOString())} (1 year from today)
             `;
         }
