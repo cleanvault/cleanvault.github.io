@@ -83,10 +83,20 @@ For larger organizations with custom requirements.
 
 CleanVault uses a **self-contained, cryptographically signed license key system** that works entirely offline:
 
+### Automatic License Generation (New!)
+
 1. **Purchase** — Buy a license via Stripe checkout
-2. **Receive key** — License key sent to your email
-3. **Activate** — Paste the key into CleanVault's activation box
-4. **Unlock** — Pro features become available immediately
+2. **Automatic generation** — After successful payment, your license key is **automatically generated** and displayed on the success page
+3. **Copy license** — Copy your license key from the success page
+4. **Activate** — Paste the key into CleanVault's activation box
+5. **Unlock** — Pro features become available immediately
+
+### Manual Activation (if needed)
+
+If you don't see your license key after purchase:
+1. Check your email for the license key
+2. Open CleanVault and scroll to the **Activate** section
+3. Paste the key and click **Activate**
 
 **Important notes:**
 - Activation is stored in your browser's localStorage
@@ -96,6 +106,7 @@ CleanVault uses a **self-contained, cryptographically signed license key system*
 - No account or login required
 - **No backend required** — All validation happens in your browser
 - **No database lookup** — License information is embedded in the key itself
+- **Fully client-side** — License generation happens in your browser after payment
 
 ### License Key Format
 
@@ -194,7 +205,31 @@ For licensing inquiries, please visit our GitHub repository.
 
 ## License Generation
 
-Licenses are generated using the included Node.js CLI tool (internal use only).
+### Automatic Generation (Customer-Facing)
+
+Licenses are now generated **automatically** after successful payment:
+
+1. Customer purchases via Stripe checkout
+2. Stripe redirects to `success.html` with plan parameter
+3. Browser automatically generates a valid license key using the same cryptographic algorithm
+4. License is displayed with copy button
+5. Customer activates in CleanVault
+
+**Benefits:**
+- Instant delivery — no email required
+- Fully client-side — no backend needed
+- Same cryptographic security as manual generation
+- Works offline after initial page load
+
+### Manual Generation (Internal Use)
+
+Licenses can also be generated using the included Node.js CLI tool:
+
+```bash
+node tools/generate-license.js <email> <plan> <expiration-date>
+# Example: node tools/generate-license.js customer@example.com pro 2027-06-28
+```
+
 The generator creates a cryptographically signed license key that can be validated entirely in the browser. No database or backend service is required.
 
 

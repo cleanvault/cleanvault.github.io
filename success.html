@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful - CleanVault Pro</title>
+    <meta name="description" content="Your CleanVault Pro license has been generated">
+    <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .success-container {
+            max-width: 800px;
+            margin: 60px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .success-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: #4ade80;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .success-icon svg {
+            width: 48px;
+            height: 48px;
+            stroke: white;
+            stroke-width: 3;
+            fill: none;
+        }
+
+        .success-title {
+            font-size: 32px;
+            color: #1e3a5f;
+            margin-bottom: 10px;
+        }
+
+        .success-subtitle {
+            font-size: 18px;
+            color: #64748b;
+        }
+
+        .license-section {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .license-section h2 {
+            color: #1e3a5f;
+            margin-bottom: 15px;
+            font-size: 22px;
+        }
+
+        .license-box {
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .license-input {
+            width: 100%;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            background: #f8fafc;
+            color: #1e3a5f;
+            font-weight: 600;
+        }
+
+        .license-input:read-only {
+            background: #f1f5f9;
+            cursor: text;
+        }
+
+        .license-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #1e3a5f;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2d4a7c;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #1e3a5f;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        .btn-success {
+            background: #4ade80;
+            color: #1e3a5f;
+        }
+
+        .btn-success:hover {
+            background: #22c55e;
+        }
+
+        .instructions {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 30px;
+        }
+
+        .instructions h3 {
+            color: #92400e;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .instructions ol {
+            margin: 0;
+            padding-left: 20px;
+            color: #78350f;
+        }
+
+        .instructions li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        .instructions a {
+            color: #1e3a5f;
+            font-weight: 600;
+            text-decoration: underline;
+        }
+
+        .plan-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            background: #1e3a5f;
+            color: white;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .expiry-info {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            color: #1e40af;
+        }
+
+        .copy-feedback {
+            display: none;
+            color: #4ade80;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .copy-feedback.show {
+            display: inline;
+        }
+
+        .footer-note {
+            text-align: center;
+            color: #64748b;
+            font-size: 14px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e3a5f;
+        }
+    </style>
+</head>
+<body>
+    <div class="success-container">
+        <!-- Logo -->
+        <div class="logo">
+            <svg class="logo-icon" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="32" height="32" rx="6" fill="#1e3a5f"/>
+                <path d="M8 10h16v2H8zM8 16h12v2H8zM8 22h8v2H8z" fill="#4ade80"/>
+            </svg>
+            <span class="logo-text">CleanVault</span>
+        </div>
+
+        <!-- Success Header -->
+        <div class="success-header">
+            <div class="success-icon">
+                <svg viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+            <h1 class="success-title">Payment Successful!</h1>
+            <p class="success-subtitle">Your CleanVault Pro license has been generated</p>
+        </div>
+
+        <!-- Plan Badge -->
+        <div style="text-align: center;">
+            <span id="plan-badge" class="plan-badge">Personal Pro</span>
+        </div>
+
+        <!-- License Section -->
+        <div class="license-section">
+            <h2>Your License Key</h2>
+            <div class="license-box">
+                <input 
+                    type="text" 
+                    id="license-key" 
+                    class="license-input" 
+                    readonly 
+                    value="Generating license..."
+                >
+            </div>
+            <div class="license-actions">
+                <button id="copy-btn" class="btn btn-success" onclick="copyLicense()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    Copy License
+                </button>
+                <button id="download-btn" class="btn btn-primary" onclick="downloadLicense()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download License
+                </button>
+                <span id="copy-feedback" class="copy-feedback">✓ Copied!</span>
+            </div>
+            <div id="expiry-info" class="expiry-info"></div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="instructions">
+            <h3>📋 Next Steps: Activate Your License</h3>
+            <ol>
+                <li><strong>Copy your license key</strong> using the button above</li>
+                <li><strong>Open CleanVault</strong> at <a href="https://cleanvault.github.io" target="_blank">https://cleanvault.github.io</a></li>
+                <li><strong>Scroll to the "Activate CleanVault Pro"</strong> section (near the bottom of the page)</li>
+                <li><strong>Paste your license key</strong> into the activation box</li>
+                <li><strong>Click "Activate Pro"</strong> — The Pro badge will appear in the header</li>
+            </ol>
+        </div>
+
+        <!-- Footer Note -->
+        <div class="footer-note">
+            <p><strong>Important:</strong> Save this license key in a safe place. You'll need it to reactivate Pro on other devices or after clearing browser data.</p>
+            <p style="margin-top: 10px;">Your license is valid for 1 year from today. Renew annually to continue receiving Pro features and updates.</p>
+        </div>
+    </div>
+
+    <script>
+        // License Generation System (client-side, matches tools/generate-license.js)
+        const LicenseGenerator = (function() {
+            // Secret key for signature generation (matches tools/generate-license.js and js/license.js)
+            const SECRET_KEY = 'CleanVault-Pro-License-Secret-2024-Secure-Key';
+
+            /**
+             * Generate signature (browser-compatible hash)
+             * Uses same algorithm as tools/generate-license.js
+             */
+            function generateSignature(data) {
+                let hash = 0;
+                const str = SECRET_KEY + data;
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash; // Convert to 32bit integer
+                }
+                // Convert to hex and take first 16 chars
+                return Math.abs(hash).toString(16).toUpperCase().substring(0, 16).padEnd(16, '0');
+            }
+
+            /**
+             * Generate a unique license key
+             * Format: CV-PRO-XXXXX-XXXXXXXX-YYYYMMDDSSSSSSSSSSSSSSSS
+             */
+            function generateLicenseKey(plan) {
+                // Calculate expiry date (1 year from now)
+                const now = new Date();
+                const expiry = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+                const expiryStr = expiry.toISOString().split('T')[0].replace(/-/g, '').substring(0, 8); // YYYYMMDD
+
+                // Generate random part (8 uppercase hex chars)
+                const randomBytes = new Uint8Array(4);
+                crypto.getRandomValues(randomBytes);
+                const randomPart = Array.from(randomBytes)
+                    .map(b => b.toString(16).toUpperCase().padStart(2, '0'))
+                    .join('')
+                    .substring(0, 8);
+
+                // Normalize plan and add version prefix
+                const planUpper = plan.toUpperCase();
+                const planPart = planUpper === 'CORP' ? 'COR' : 'PRO'; // 3 chars
+                const versionPlanBlock = '01' + planPart; // 5 chars total: version(2) + plan(3)
+
+                // Create data to sign: versionPlan|random|expiry
+                const dataToSign = `${versionPlanBlock}|${randomPart}|${expiryStr}`;
+                const signature = generateSignature(dataToSign);
+
+                // Last part: expiry (8 digits) + signature (16 hex) = 24 chars, NO dash
+                return `CV-PRO-${versionPlanBlock}-${randomPart}-${expiryStr}${signature}`;
+            }
+
+            return {
+                generateLicenseKey
+            };
+        })();
+
+        // Get plan from URL parameters
+        function getPlanFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const plan = urlParams.get('plan');
+            
+            // Validate plan
+            if (plan && (plan.toLowerCase() === 'pro' || plan.toLowerCase() === 'corp')) {
+                return plan.toLowerCase();
+            }
+            
+            // Default to personal pro
+            return 'pro';
+        }
+
+        // Format date for display
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+        }
+
+        // Generate license on page load
+        function generateLicense() {
+            const plan = getPlanFromURL();
+            const licenseKey = LicenseGenerator.generateLicenseKey(plan);
+            
+            // Calculate expiry date
+            const now = new Date();
+            const expiryDate = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+            
+            // Update UI
+            document.getElementById('license-key').value = licenseKey;
+            
+            // Update plan badge
+            const planBadge = document.getElementById('plan-badge');
+            planBadge.textContent = plan === 'corp' ? 'Corporate Plan' : 'Personal Pro';
+            
+            // Update expiry info
+            const expiryInfo = document.getElementById('expiry-info');
+            expiryInfo.innerHTML = `
+                <strong>Plan:</strong> ${plan === 'corp' ? 'Corporate' : 'Personal Pro'} | 
+                <strong>Expires:</strong> ${formatDate(expiryDate.toISOString())} (1 year from today)
+            `;
+        }
+
+        // Copy license to clipboard
+        function copyLicense() {
+            const licenseInput = document.getElementById('license-key');
+            const copyFeedback = document.getElementById('copy-feedback');
+            
+            // Select and copy
+            licenseInput.select();
+            licenseInput.setSelectionRange(0, 99999); // For mobile devices
+            
+            try {
+                navigator.clipboard.writeText(licenseInput.value).then(() => {
+                    // Show feedback
+                    copyFeedback.classList.add('show');
+                    
+                    // Hide after 3 seconds
+                    setTimeout(() => {
+                        copyFeedback.classList.remove('show');
+                    }, 3000);
+                }).catch(err => {
+                    // Fallback for older browsers
+                    document.execCommand('copy');
+                    copyFeedback.classList.add('show');
+                    setTimeout(() => {
+                        copyFeedback.classList.remove('show');
+                    }, 3000);
+                });
+            } catch (err) {
+                console.error('Failed to copy:', err);
+                alert('Please manually select and copy the license key (Ctrl+C or Cmd+C)');
+            }
+        }
+
+        // Download license as text file
+        function downloadLicense() {
+            const licenseInput = document.getElementById('license-key');
+            const licenseKey = licenseInput.value;
+            
+            // Get plan and expiry info for the license file
+            const planBadge = document.getElementById('plan-badge');
+            const planText = planBadge.textContent;
+            const expiryInfo = document.getElementById('expiry-info');
+            const expiryText = expiryInfo.textContent;
+            
+            // Create license file content
+            const licenseContent = `CleanVault Pro License
+
+License Key: ${licenseKey}
+
+Plan: ${planText}
+${expiryText}
+
+Activation Instructions:
+1. Go to https://cleanvault.github.io
+2. Scroll to "Activate CleanVault Pro" section
+3. Paste this license key and click "Activate Pro"
+
+Generated: ${new Date().toLocaleString()}
+`;
+            
+            // Create blob with the license text
+            const blob = new Blob([licenseContent], { type: 'text/plain' });
+            
+            // Create download link
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'cleanvault-license.txt';
+            
+            // Trigger download
+            document.body.appendChild(link);
+            link.click();
+            
+            // Cleanup
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // Auto-generate license on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            // Small delay to ensure everything is loaded
+            setTimeout(generateLicense, 100);
+        });
+
+        // Regenerate if URL parameters change
+        window.addEventListener('popstate', generateLicense);
+    </script>
+</body>
+</html>

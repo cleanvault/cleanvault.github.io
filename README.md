@@ -94,11 +94,18 @@ Unlock additional features with a CleanVault Pro license.
 
 ### How to Activate
 
-1. Purchase a license (Stripe checkout).
-2. You'll receive a license key via email.
-3. Open CleanVault, scroll to the **Activate** section.
-4. Paste your license key and click **Activate**.
-5. The Pro badge appears in the header.
+**Automatic License Generation (New!):**
+
+1. Purchase a license via Stripe checkout.
+2. After payment, you'll be redirected to a success page with your **automatically generated license key**.
+3. Copy your license key from the success page.
+4. Open CleanVault, scroll to the **Activate** section.
+5. Paste your license key and click **Activate**.
+6. The Pro badge appears in the header.
+
+**Manual Activation (if needed):**
+
+If you don't see your license key after purchase, check your email for the license key, then follow steps 3-6 above.
 
 > **Note:** Pro activation is stored in your browser's localStorage. Clearing your browser data will deactivate your license — keep your license key safe. License must be renewed annually to maintain Pro access.
 
