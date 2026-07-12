@@ -7,12 +7,4 @@
         <changefreq>weekly</changefreq>
         <priority>1.0</priority>
     </url>
-    
-    <!-- Success page (for license activation) -->
-    <url>
-        <loc>https://cleanvault.github.io/success.html</loc>
-        <lastmod>2025-01-11</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.5</priority>
-    </url>
 </urlset>
