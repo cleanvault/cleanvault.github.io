@@ -137,28 +137,6 @@ All validation happens 100% in your browser using JavaScript. No data is sent to
 
 ---
 
-## Limitations
-
-Client-side licensing has inherent limitations:
-- **No remote revocation** — Licenses cannot be remotely deactivated
-- **No device tracking** — Cannot limit concurrent device usage
-- **Client-side bypass** — Determined users can bypass via DevTools
-- **Secret key embedded** — The signing key is embedded in client-side JavaScript
-
-For organizations needing stronger licensing controls, the Enterprise plan offers custom solutions including backend validation.
-
-### Security Model
-
-This license system provides **deterrence against casual piracy**:
-
-- Cryptographically signed licenses prevent tampering
-- Expiration dates are embedded in the license key
-- Plan types are encoded in the license key
-- Signature verification ensures authenticity
-
-**Note:** The secret key used for signing is embedded in the browser code. While this deters casual users from creating fake licenses, determined users with technical knowledge can extract the key and create fraudulent licenses. This is an inherent limitation of client-side-only licensing without a backend validation service.
-
----
 
 ## Payment
 
@@ -203,34 +181,3 @@ For licensing inquiries, please visit our GitHub repository.
 
 ---
 
-## License Generation
-
-### Automatic Generation (Customer-Facing)
-
-Licenses are now generated **automatically** after successful payment:
-
-1. Customer purchases via Stripe checkout
-2. Stripe redirects to `success.html` with plan parameter
-3. Browser automatically generates a valid license key using the same cryptographic algorithm
-4. License is displayed with copy button
-5. Customer activates in CleanVault
-
-**Benefits:**
-- Instant delivery — no email required
-- Fully client-side — no backend needed
-- Same cryptographic security as manual generation
-- Works offline after initial page load
-
-### Manual Generation (Internal Use)
-
-Licenses can also be generated using the included Node.js CLI tool:
-
-```bash
-node tools/generate-license.js <email> <plan> <expiration-date>
-# Example: node tools/generate-license.js customer@example.com pro 2027-06-28
-```
-
-The generator creates a cryptographically signed license key that can be validated entirely in the browser. No database or backend service is required.
-
-
-*CleanVault — Your files never leave your computer.*

@@ -234,6 +234,24 @@ The browser validates licenses by:
 
 ---
 
+## 🛠️ Running Locally
+
+For developers who want to run CleanVault locally:
+
+```bash
+# Clone the repository
+git clone https://github.com/cleanvault/cleanvault.git
+cd cleanvault
+
+# Start a local server
+python3 -m http.server 8000
+
+# Open in browser
+open http://localhost:8000
+```
+
+---
+
 ## ❓ FAQ
 
 ### Is CleanVault really private?
@@ -270,145 +288,15 @@ For any issues or questions, please check the documentation or open an issue on 
 
 ---
 
-## 🛠️ Running Locally
 
-```bash
-# Clone the repository
-git clone https://github.com/cleanvault/cleanvault.git
-cd cleanvault
 
-# Start a local server
-python3 -m http.server 8000
 
-# Open in browser
-open http://localhost:8000
-```
 
----
-
-## 🚢 Deploying to GitHub Pages
-
-1. Push this repository to GitHub.
-2. Go to **Settings → Pages**.
-3. Under **Source**, select the `main` branch.
-4. Click **Save**.
-5. Your site is live at `https://cleanvault.github.io`.
-
-> Create a `.nojekyll` file in the root directory to prevent Jekyll processing.
-
----
-
-## 📁 Project Structure
-
-```
-cleanvault/
-├── index.html              # Main single-page application
-├── style.css               # All styles
-├── js/
-│   ├── pdf-tools.js        # Core PDF manipulation functions
-│   ├── license.js          # Pro license management system
-│   ├── limits.js           # Usage limits for Free vs Pro tiers
-│   ├── ui.js               # Shared UI, tool switching, drag-and-drop
-│   ├── merge.js            # Merge PDF tool
-│   ├── split.js            # Split PDF tool
-│   ├── extract.js          # Extract pages tool
-│   ├── rotate.js           # Rotate PDF tool
-│   ├── remove-metadata.js  # Remove metadata tool
-│   ├── reorder.js          # Reorder pages tool
-│   ├── watermark.js        # Watermark tool (Pro)
-│   ├── page-numbers.js     # Page numbers tool (Pro)
-│   ├── remove.js           # Remove pages tool
-│   └── batch.js            # Batch processing tool (Pro)
-├── tools/                  # License generator (Node.js CLI)
-│   └── generate-license.js # CLI tool for generating license keys
-├── assets/
-│   └── logo.svg            # SVG logo
-├── .nojekyll               # Prevents Jekyll processing on GitHub Pages
-├── .gitignore
-└── README.md
-```
-
----
-
-## 📄 License
-
-MIT License — free for personal and commercial use.
-
----
-
-## 📬 Contact
+## � Contact
 
 For inquiries, please visit our GitHub repository.
 
 ---
 
-## 🔍 SEO & Search Engine Optimization
-
-CleanVault is optimized for search engines to help users find privacy-first PDF tools:
-
-### Target Keywords
-- Privacy-first PDF tools
-- Private PDF tools
-- Browser-based PDF tools
-- PDF tools without uploading files
-- Local PDF processing
-- Secure PDF tools
-- Free PDF tools
-- Online PDF tools
-- Merge PDF
-- Split PDF
-- Extract PDF pages
-- Remove PDF metadata
-- Reorder PDF pages
-- Rotate PDF
-
-### SEO Features Implemented
-
-**Meta Tags & Open Graph:**
-- Optimized title tags with primary keywords
-- Compelling meta descriptions for all pages
-- Open Graph tags for social media sharing (Facebook, LinkedIn)
-- Twitter Card meta tags
-- Canonical URLs to prevent duplicate content
-
-**Structured Data:**
-- Schema.org WebApplication markup
-- Pricing information in structured format
-- Feature lists for search engines
-- Software version and license information
-
-**Technical SEO:**
-- robots.txt with sitemap reference
-- XML sitemap for search engine crawling
-- Semantic HTML5 elements (header, main, section, article, footer)
-- Proper heading hierarchy (H1 → H2 → H3)
-- ARIA labels and roles for accessibility
-- Skip navigation links for screen readers
-- Image alt attributes and SVG accessibility
-
-**Performance & Mobile:**
-- Mobile-responsive design
-- Fast loading (no heavy frameworks)
-- Optimized CSS with minimal render-blocking
-- Print-friendly styles
-
-**Accessibility (SEO Benefit):**
-- WCAG 2.1 compliant
-- Keyboard navigation support
-- Screen reader friendly
-- High contrast mode support
-- Reduced motion support
-
-### Search Engine Visibility
-
-The site is optimized for indexing by:
-- Google Search
-- Bing
-- DuckDuckGo
-- Other major search engines
-
-All PDF processing happens client-side, making CleanVault unique in the PDF tool market.
-
----
 
 *CleanVault — Your files never leave your computer.*
