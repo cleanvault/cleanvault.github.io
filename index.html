@@ -3,25 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CleanVault - Privacy-First PDF Tools That Run In Your Browser</title>
-    <meta name="description" content="Merge, split, extract, and rotate PDFs privately. CleanVault processes your files locally in your browser. No uploads, no storage, complete privacy.">
-    <meta name="keywords" content="merge PDF online, split PDF online, private PDF tools, PDF tools without upload, browser PDF tools, secure PDF merger, local PDF tools">
+    <meta name="description" content="Free privacy-first PDF tools that run in your browser. Merge, split, extract, rotate, and remove metadata from PDFs without uploading files. 100% local processing, complete privacy.">
+    <meta name="keywords" content="privacy-first PDF tools, private PDF tools, browser-based PDF tools, PDF tools without uploading, local PDF processing, secure PDF tools, merge PDF, split PDF, extract PDF pages, remove PDF metadata, reorder PDF pages, rotate PDF, free PDF tools, online PDF tools">
+    <meta name="author" content="CleanVault">
+    <meta name="robots" content="index, follow">
+    <meta name="googlebot" content="index, follow">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://cleanvault.github.io/">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://cleanvault.github.io/">
+    <meta property="og:title" content="CleanVault - Privacy-First PDF Tools That Run In Your Browser">
+    <meta property="og:description" content="Free privacy-first PDF tools. Merge, split, extract, rotate PDFs without uploading files. 100% local processing in your browser. Complete privacy.">
+    <meta property="og:image" content="https://cleanvault.github.io/assets/logo.svg">
+    <meta property="og:image:width" content="512">
+    <meta property="og:image:height" content="512">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:site_name" content="CleanVault">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://cleanvault.github.io/">
+    <meta name="twitter:title" content="CleanVault - Privacy-First PDF Tools That Run In Your Browser">
+    <meta name="twitter:description" content="Free privacy-first PDF tools. Merge, split, extract, rotate PDFs without uploading files. 100% local processing in your browser.">
+    <meta name="twitter:image" content="https://cleanvault.github.io/assets/logo.svg">
+    
+    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+    <link rel="apple-touch-icon" href="assets/logo.svg">
+    
+    <!-- Stylesheet -->
     <link rel="stylesheet" href="style.css">
+    
+    <!-- Structured Data / Schema.org -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "CleanVault",
+        "applicationCategory": "UtilityApplication",
+        "operatingSystem": "Any (Browser-based)",
+        "offers": [
+            {
+                "@type": "Offer",
+                "name": "CleanVault Free",
+                "price": "0",
+                "priceCurrency": "USD",
+                "description": "Free PDF tools with daily usage limits"
+            },
+            {
+                "@type": "Offer",
+                "name": "CleanVault Pro Personal",
+                "price": "29.99",
+                "priceCurrency": "USD",
+                "description": "Annual subscription for individual users with unlimited access"
+            },
+            {
+                "@type": "Offer",
+                "name": "CleanVault Pro Corporate",
+                "price": "99.99",
+                "priceCurrency": "USD",
+                "description": "Annual subscription for teams up to 10 users"
+            }
+        ],
+        "description": "Privacy-first PDF tools that run entirely in your browser. Merge, split, extract, rotate, and manage PDFs without uploading files. 100% local processing ensures complete privacy.",
+        "url": "https://cleanvault.github.io",
+        "featureList": [
+            "Merge PDF files",
+            "Split PDF by page ranges",
+            "Extract specific pages",
+            "Rotate PDF pages",
+            "Remove PDF metadata",
+            "Reorder PDF pages",
+            "Remove pages from PDF",
+            "Add watermarks (Pro)",
+            "Add page numbers (Pro)",
+            "Batch processing (Pro)"
+        ],
+        "screenshot": "https://cleanvault.github.io/assets/logo.svg",
+        "softwareVersion": "1.0.0",
+        "license": "https://www.gnu.org/licenses/mit",
+        "creator": {
+            "@type": "Organization",
+            "name": "CleanVault"
+        },
+        "applicationSubCategory": "PDF Tools",
+        "permissions": "browser-only",
+        "availableOnChannel": "https://cleanvault.github.io"
+    }
+    </script>
+    
+    <title>CleanVault - Privacy-First PDF Tools That Run In Your Browser | Free PDF Tools</title>
 </head>
 <body>
+    <!-- Skip to main content link for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
     <!-- Header -->
-    <header class="header">
+    <header class="header" role="banner">
         <div class="container">
             <div class="logo">
-                <svg class="logo-icon" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg class="logo-icon" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="CleanVault logo" role="img">
+                    <title>CleanVault Logo</title>
                     <rect width="32" height="32" rx="6" fill="#1e3a5f"/>
                     <path d="M8 10h16v2H8zM8 16h12v2H8zM8 22h8v2H8z" fill="#4ade80"/>
                 </svg>
                 <span class="logo-text">CleanVault</span>
-                <span id="pro-badge" class="pro-badge">Free</span>
+                <span id="pro-badge" class="pro-badge" aria-label="Free tier">Free</span>
             </div>
-            <nav class="nav">
+            <nav class="nav" role="navigation" aria-label="Main navigation">
                 <a href="#tools">PDF Tools</a>
                 <a href="#privacy">Privacy</a>
                 <a href="#pricing">Pricing</a>
@@ -30,9 +122,9 @@
     </header>
 
     <!-- Hero Section -->
-    <section class="hero">
+    <section class="hero" aria-labelledby="hero-heading">
         <div class="container">
-            <h1>Privacy-First PDF Tools</h1>
+            <h1 id="hero-heading">Privacy-First PDF Tools</h1>
             <p class="hero-subtitle">Merge, split, rotate, and extract PDFs without uploading your files.</p>
             <p class="hero-tagline">Your files never leave your computer.</p>
             <div class="hero-buttons">
@@ -43,169 +135,182 @@
     </section>
 
     <!-- Tools Section -->
-    <section id="tools" class="tools">
+    <section id="tools" class="tools" aria-labelledby="tools-heading">
         <div class="container">
-            <h2>PDF Tools</h2>
+            <h2 id="tools-heading">PDF Tools</h2>
             <div class="tools-grid">
                 <!-- Merge PDF Card -->
-                <div class="tool-card">
+                <article class="tool-card" aria-labelledby="merge-heading">
                     <div class="tool-icon">
-                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Merge PDF icon" role="img">
+                            <title>Merge PDF Icon</title>
                             <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
                             <path d="M24 16v16M16 24h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                         </svg>
                     </div>
-                    <h3>PDF Merge</h3>
+                    <h3 id="merge-heading">PDF Merge</h3>
                     <p>Combine multiple PDF files into one document.</p>
-                    <button class="btn btn-secondary" onclick="showTool('merge')">Merge PDFs</button>
-                </div>
+                    <button class="btn btn-secondary" onclick="showTool('merge')" aria-label="Merge PDF files">Merge PDFs</button>
+                </article>
 
                 <!-- Split PDF Card -->
-                <div class="tool-card">
+                <article class="tool-card" aria-labelledby="split-heading">
                     <div class="tool-icon">
-                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Split PDF icon" role="img">
+                            <title>Split PDF Icon</title>
                             <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
                             <path d="M24 16v16M20 20l8-4M20 28l8 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
-                    <h3>PDF Split</h3>
+                    <h3 id="split-heading">PDF Split</h3>
                     <p>Split a PDF into multiple files by page ranges.</p>
-                    <button class="btn btn-secondary" onclick="showTool('split')">Split PDF</button>
-                </div>
+                    <button class="btn btn-secondary" onclick="showTool('split')" aria-label="Split PDF file">Split PDF</button>
+                </article>
 
                 <!-- Extract Pages Card -->
-                <div class="tool-card">
+                <article class="tool-card" aria-labelledby="extract-heading">
                     <div class="tool-icon">
-                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Extract pages icon" role="img">
+                            <title>Extract Pages Icon</title>
                             <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
                             <path d="M16 20h16M16 28h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                         </svg>
                     </div>
-                    <h3>Extract Pages</h3>
+                    <h3 id="extract-heading">Extract Pages</h3>
                     <p>Extract specific pages from a PDF document.</p>
-                    <button class="btn btn-secondary" onclick="showTool('extract')">Extract Pages</button>
-                </div>
+                    <button class="btn btn-secondary" onclick="showTool('extract')" aria-label="Extract pages from PDF">Extract Pages</button>
+                </article>
 
                 <!-- Rotate PDF Card -->
-                <div class="tool-card">
+                <article class="tool-card" aria-labelledby="rotate-heading">
                     <div class="tool-icon">
-                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Rotate PDF icon" role="img">
+                            <title>Rotate PDF Icon</title>
                             <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
                             <path d="M24 16v8l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             <path d="M24 32a8 8 0 100-16 8 8 0 000 16z" stroke="currentColor" stroke-width="2"/>
                         </svg>
                     </div>
-                    <h3>Rotate PDF</h3>
+                    <h3 id="rotate-heading">Rotate PDF</h3>
                     <p>Rotate pages in your PDF document.</p>
-                    <button class="btn btn-secondary" onclick="showTool('rotate')">Rotate PDF</button>
-                </div>
+                    <button class="btn btn-secondary" onclick="showTool('rotate')" aria-label="Rotate PDF pages">Rotate PDF</button>
+                </article>
 
                 <!-- Remove Metadata Card -->
-                <div class="tool-card">
+                <article class="tool-card" aria-labelledby="metadata-heading">
                     <div class="tool-icon">
-                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Remove metadata icon" role="img">
+                            <title>Remove Metadata Icon</title>
                             <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
                             <path d="M24 16v16M20 20l8-4M20 28l8 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             <circle cx="24" cy="32" r="2" fill="currentColor"/>
                         </svg>
                     </div>
-                    <h3>Remove Metadata</h3>
+                    <h3 id="metadata-heading">Remove Metadata</h3>
                     <p>Remove metadata (title, author, keywords, etc.) from your PDF.</p>
-                    <button class="btn btn-secondary" onclick="showTool('compress')">Remove Metadata</button>
-                </div>
+                    <button class="btn btn-secondary" onclick="showTool('compress')" aria-label="Remove metadata from PDF">Remove Metadata</button>
+                </article>
 
                 <!-- Reorder Pages Card -->
-                <div class="tool-card">
+                <article class="tool-card" aria-labelledby="reorder-heading">
                     <div class="tool-icon">
-                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Reorder pages icon" role="img">
+                            <title>Reorder Pages Icon</title>
                             <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
                             <path d="M24 16v8l6 6M24 32a8 8 0 100-16 8 8 0 000 16z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
-                    <h3>Reorder Pages</h3>
+                    <h3 id="reorder-heading">Reorder Pages</h3>
                     <p>Drag and drop to rearrange pages in your PDF.</p>
-                    <button class="btn btn-secondary" onclick="showTool('reorder')">Reorder Pages</button>
-                </div>
+                    <button class="btn btn-secondary" onclick="showTool('reorder')" aria-label="Reorder PDF pages">Reorder Pages</button>
+                </article>
 
                 <!-- Remove Pages Card -->
-                <div class="tool-card">
+                <article class="tool-card" aria-labelledby="remove-heading">
                     <div class="tool-icon">
-                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Remove pages icon" role="img">
+                            <title>Remove Pages Icon</title>
                             <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
                             <path d="M16 16h16M16 24h16M16 32h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                             <path d="M28 16l-4 4 4 4M28 32l-4-4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
-                    <h3>Remove Pages</h3>
+                    <h3 id="remove-heading">Remove Pages</h3>
                     <p>Delete specific pages from your PDF.</p>
-                    <button class="btn btn-secondary" onclick="showTool('remove')">Remove Pages</button>
-                </div>
+                    <button class="btn btn-secondary" onclick="showTool('remove')" aria-label="Remove pages from PDF">Remove Pages</button>
+                </article>
 
                 <!-- Watermark Card (Pro) -->
-                <div class="tool-card pro-tool">
+                <article class="tool-card pro-tool" aria-labelledby="watermark-heading">
                     <div class="pro-badge-card">Pro</div>
                     <div class="tool-icon">
-                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Add watermark icon" role="img">
+                            <title>Add Watermark Icon</title>
                             <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
                             <path d="M24 16v16M20 20l8-4M20 28l8 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             <circle cx="24" cy="32" r="2" fill="currentColor"/>
                         </svg>
                     </div>
-                    <h3>Add Watermark</h3>
+                    <h3 id="watermark-heading">Add Watermark</h3>
                     <p>Add text watermarks to all pages in your PDF.</p>
-                    <button class="btn btn-secondary" onclick="showTool('watermark')">Add Watermark</button>
-                    <button class="btn btn-upgrade" onclick="showUpgradeModal()">Upgrade to Pro</button>
-                </div>
+                    <button class="btn btn-secondary" onclick="showTool('watermark')" aria-label="Add watermark to PDF">Add Watermark</button>
+                    <button class="btn btn-upgrade" onclick="showUpgradeModal()" aria-label="Upgrade to Pro version">Upgrade to Pro</button>
+                </article>
 
                 <!-- Page Numbers Card (Pro) -->
-                <div class="tool-card pro-tool">
+                <article class="tool-card pro-tool" aria-labelledby="pagenumbers-heading">
                     <div class="pro-badge-card">Pro</div>
                     <div class="tool-icon">
-                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Add page numbers icon" role="img">
+                            <title>Add Page Numbers Icon</title>
                             <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
                             <path d="M16 20h16M16 28h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                         </svg>
                     </div>
-                    <h3>Add Page Numbers</h3>
+                    <h3 id="pagenumbers-heading">Add Page Numbers</h3>
                     <p>Add page numbers to all pages in your PDF.</p>
-                    <button class="btn btn-secondary" onclick="showTool('pagenumbers')">Add Page Numbers</button>
-                    <button class="btn btn-upgrade" onclick="showUpgradeModal()">Upgrade to Pro</button>
-                </div>
+                    <button class="btn btn-secondary" onclick="showTool('pagenumbers')" aria-label="Add page numbers to PDF">Add Page Numbers</button>
+                    <button class="btn btn-upgrade" onclick="showUpgradeModal()" aria-label="Upgrade to Pro version">Upgrade to Pro</button>
+                </article>
 
                 <!-- Batch Processing Card (Pro) -->
-                <div class="tool-card pro-tool">
+                <article class="tool-card pro-tool" aria-labelledby="batch-heading">
                     <div class="pro-badge-card">Pro</div>
                     <div class="tool-icon">
-                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Batch processing icon" role="img">
+                            <title>Batch Processing Icon</title>
                             <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
                             <path d="M16 16h16M16 24h16M16 32h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                             <path d="M28 16l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
-                    <h3>Batch Processing</h3>
+                    <h3 id="batch-heading">Batch Processing</h3>
                     <p>Process multiple PDFs at once with the same operation (rotate, watermark, page numbers, remove pages, extract pages).</p>
-                    <button class="btn btn-secondary" onclick="showTool('batch')">Batch Process</button>
-                    <button class="btn btn-upgrade" onclick="showUpgradeModal()">Upgrade to Pro</button>
-                </div>
+                    <button class="btn btn-secondary" onclick="showTool('batch')" aria-label="Batch process PDF files">Batch Process</button>
+                    <button class="btn btn-upgrade" onclick="showUpgradeModal()" aria-label="Upgrade to Pro version">Upgrade to Pro</button>
+                </article>
             </div>
         </div>
     </section>
 
+    <!-- Main Content -->
+    <main id="main-content">
     <!-- Tool Interface Section -->
-    <section id="tool-interface" class="tool-interface" style="display: none;">
+    <section id="tool-interface" class="tool-interface" style="display: none;" aria-label="PDF tool interface">
         <div class="container">
-            <button class="btn-back" onclick="hideTool()">← Back to Tools</button>
+            <button class="btn-back" onclick="hideTool()" aria-label="Back to tools list">← Back to Tools</button>
             <div id="tool-content"></div>
         </div>
     </section>
 
     <!-- Privacy Section -->
-    <section id="privacy" class="privacy">
+    <section id="privacy" class="privacy" aria-labelledby="privacy-heading">
         <div class="container">
-            <h2>Your Privacy Matters</h2>
+            <h2 id="privacy-heading">Your Privacy Matters</h2>
             <div class="privacy-content">
                 <div class="privacy-item">
-                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="No uploads icon" role="img">
+                        <title>No Uploads Icon</title>
                         <path d="M16 4L4 8v8c0 7.7 5.1 14.9 12 17 6.9-2.1 12-9.3 12-17V8L16 4z" stroke="currentColor" stroke-width="2" fill="none"/>
                         <path d="M10 16l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
@@ -213,7 +318,8 @@
                     <p>Your files never leave your computer. Everything is processed locally in your browser.</p>
                 </div>
                 <div class="privacy-item">
-                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="No storage icon" role="img">
+                        <title>No Storage Icon</title>
                         <rect x="6" y="10" width="20" height="16" rx="2" stroke="currentColor" stroke-width="2" fill="none"/>
                         <path d="M12 10V8a4 4 0 018 0v2" stroke="currentColor" stroke-width="2" fill="none"/>
                         <circle cx="16" cy="18" r="2" fill="currentColor"/>
@@ -222,7 +328,8 @@
                     <p>We don't store your documents. Once you close the browser, everything is gone.</p>
                 </div>
                 <div class="privacy-item">
-                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Complete privacy icon" role="img">
+                        <title>Complete Privacy Icon</title>
                         <path d="M16 4v24M8 8l8-4 8 4M8 24l8 4 8-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                     <h3>Complete Privacy</h3>
@@ -233,24 +340,25 @@
     </section>
 
     <!-- License Activation Section -->
-    <section id="activation" class="activation-section">
+    <section id="activation" class="activation-section" aria-labelledby="activation-heading">
         <div class="container">
-            <h2>Activate CleanVault Pro</h2>
+            <h2 id="activation-heading">Activate CleanVault Pro</h2>
             <p>Already purchased a license? Enter your key below to unlock all Pro features including Watermarks, Page Numbers, and Batch Processing.</p>
             <div class="activation-form">
-                <input type="text" id="license-input" placeholder="CV-PRO-01PRO-A1B2C3D4-20271231ABCDEF1234567890" class="license-input">
+                <label for="license-input" class="visually-hidden">License Key</label>
+                <input type="text" id="license-input" placeholder="CV-PRO-01PRO-A1B2C3D4-20271231ABCDEF1234567890" class="license-input" aria-describedby="activation-hint">
                 <button id="activate-btn" class="btn btn-primary">Activate Pro</button>
             </div>
-            <p id="activation-status" class="activation-status"></p>
+            <p id="activation-status" class="activation-status" aria-live="polite"></p>
             <button id="deactivate-btn" class="btn btn-secondary" style="display: none;">Deactivate Pro</button>
-            <p class="form-hint">Pro activation is stored in your browser's localStorage. Keep your license key safe for reactivation.</p>
+            <p id="activation-hint" class="form-hint">Pro activation is stored in your browser's localStorage. Keep your license key safe for reactivation.</p>
         </div>
     </section>
 
     <!-- Pricing Section -->
-    <section id="pricing" class="pricing">
+    <section id="pricing" class="pricing" aria-labelledby="pricing-heading">
         <div class="container">
-            <h2>Get CleanVault Pro</h2>
+            <h2 id="pricing-heading">Get CleanVault Pro</h2>
             <p class="pricing-subtitle">Annual subscription. Billed yearly. Cancel anytime.</p>
             
             <div class="pricing-grid">
@@ -312,20 +420,20 @@
     </section>
 
     <!-- Feedback Section -->
-    <section class="feedback">
+    <section class="feedback" aria-labelledby="feedback-heading">
         <div class="container">
-            <h2>Help Improve CleanVault</h2>
-            <p>Found a bug or have a suggestion? Send feedback.</p>
-            <a href="https://docs.google.com/forms/d/e/1FAIpQLSf2vqVLEq0DULlg8Reb09cunQntRQaAIHcis4HxZtbNZMVTkg/viewform?usp=header" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Send Feedback</a>
+            <h2 id="feedback-heading">Help Improve CleanVault</h2>
+            <p>Found a bug or have a suggestion? <a href="https://docs.google.com/forms/d/e/1FAIpQLSf2vqVLEq0DULlg8Reb09cunQntRQaAIHcis4HxZtbNZMVTkg/viewform?usp=header" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Send Feedback</a></p>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer class="footer">
+    <footer class="footer" role="contentinfo">
         <div class="container">
             <div class="footer-content">
                 <div class="footer-logo">
-                    <svg class="logo-icon" width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg class="logo-icon" width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="CleanVault logo" role="img">
+                        <title>CleanVault Logo</title>
                         <rect width="32" height="32" rx="6" fill="#1e3a5f"/>
                         <path d="M8 10h16v2H8zM8 16h12v2H8zM8 22h8v2H8z" fill="#4ade80"/>
                     </svg>
@@ -333,9 +441,11 @@
                 </div>
                 <p>Privacy-first browser tools.</p>
                 <p class="footer-tagline">Your files never leave your computer.</p>
+                <p class="footer-copyright">© 2025 CleanVault. All rights reserved.</p>
             </div>
         </div>
     </footer>
+    </main>
 
     <!-- Scripts -->
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>

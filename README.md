@@ -342,4 +342,73 @@ For inquiries, please visit our GitHub repository.
 
 ---
 
+## 🔍 SEO & Search Engine Optimization
+
+CleanVault is optimized for search engines to help users find privacy-first PDF tools:
+
+### Target Keywords
+- Privacy-first PDF tools
+- Private PDF tools
+- Browser-based PDF tools
+- PDF tools without uploading files
+- Local PDF processing
+- Secure PDF tools
+- Free PDF tools
+- Online PDF tools
+- Merge PDF
+- Split PDF
+- Extract PDF pages
+- Remove PDF metadata
+- Reorder PDF pages
+- Rotate PDF
+
+### SEO Features Implemented
+
+**Meta Tags & Open Graph:**
+- Optimized title tags with primary keywords
+- Compelling meta descriptions for all pages
+- Open Graph tags for social media sharing (Facebook, LinkedIn)
+- Twitter Card meta tags
+- Canonical URLs to prevent duplicate content
+
+**Structured Data:**
+- Schema.org WebApplication markup
+- Pricing information in structured format
+- Feature lists for search engines
+- Software version and license information
+
+**Technical SEO:**
+- robots.txt with sitemap reference
+- XML sitemap for search engine crawling
+- Semantic HTML5 elements (header, main, section, article, footer)
+- Proper heading hierarchy (H1 → H2 → H3)
+- ARIA labels and roles for accessibility
+- Skip navigation links for screen readers
+- Image alt attributes and SVG accessibility
+
+**Performance & Mobile:**
+- Mobile-responsive design
+- Fast loading (no heavy frameworks)
+- Optimized CSS with minimal render-blocking
+- Print-friendly styles
+
+**Accessibility (SEO Benefit):**
+- WCAG 2.1 compliant
+- Keyboard navigation support
+- Screen reader friendly
+- High contrast mode support
+- Reduced motion support
+
+### Search Engine Visibility
+
+The site is optimized for indexing by:
+- Google Search
+- Bing
+- DuckDuckGo
+- Other major search engines
+
+All PDF processing happens client-side, making CleanVault unique in the PDF tool market.
+
+---
+
 *CleanVault — Your files never leave your computer.*

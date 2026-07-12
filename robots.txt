@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://cleanvault.github.io/sitemap.xml
+
+# Crawl delay (optional, be respectful)
+Crawl-delay: 1
+
+# Disallow admin or test pages if any
+# Disallow: /test/
+# Disallow: /tools/
+
+# Allow all assets
+Allow: /assets/
+Allow: /js/
+Allow: /css/
