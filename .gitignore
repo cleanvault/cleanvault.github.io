@@ -9,9 +9,11 @@ test-*.js
 test*.pdf
 *.test.js
 *.spec.js
+test-*.html
 
 # Development tools
 tools/
+*.py
 
 # Documentation (not for production)
 docs/
