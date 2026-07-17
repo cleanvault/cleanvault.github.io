@@ -81,7 +81,7 @@ For larger organizations with custom requirements.
 
 ## How Licensing Works
 
-CleanVault uses a **self-contained, cryptographically signed license key system** that works entirely offline:
+CleanVault uses a **self-contained, hash-signed license key system** that works entirely offline:
 
 ### Automatic License Generation (New!)
 
@@ -110,7 +110,7 @@ If you don't see your license key after purchase:
 
 ### License Key Format
 
-Each license key is self-contained and cryptographically signed:
+Each license key is self-contained and hash-signed:
 
 **Format:** `CV-PRO-{VERSION}{PLAN}-{RANDOM}-{YYYYMMDD}{SIG}`
 
@@ -121,7 +121,7 @@ Each license key is self-contained and cryptographically signed:
 - **PLAN** (3 chars): Plan type ("PRO" or "COR")
 - **RANDOM** (8 hex chars): Unique identifier
 - **YYYYMMDD** (8 chars): Expiration date
-- **SIG** (16 hex chars): Cryptographic signature (concatenated directly after expiry, no dash)
+- **SIG** (16 hex chars): Hash-based signature (concatenated directly after expiry, no dash)
 
 ### How Validation Works
 
@@ -131,7 +131,7 @@ The browser validates licenses without any server communication:
 2. **Verify version** — Check license version compatibility
 3. **Verify plan** — Validate plan type (PRO or COR)
 4. **Check expiry** — Ensure license has not expired
-5. **Verify signature** — Cryptographically verify the key has not been tampered with
+5. **Verify signature** — Verify the key has not been casually modified
 
 All validation happens 100% in your browser using JavaScript. No data is sent to any server.
 
@@ -149,8 +149,8 @@ All validation happens 100% in your browser using JavaScript. No data is sent to
 
 | Plan | Price | Best For |
 |------|-------|----------|
-| | **Personal** | $29.99/year | Individual users |
-| | **Corporate** | $99.99/year | Teams up to 10 users |
+| **Personal** | $29.99/year | Individual users |
+| **Corporate** | $99.99/year | Teams up to 10 users |
 
 **All plans include:** 1 year of Pro features and updates, priority support
 
@@ -160,24 +160,4 @@ All validation happens 100% in your browser using JavaScript. No data is sent to
 
 For licensing inquiries, please visit our GitHub repository.
 
----
-
-### Pro Features
-
-| Feature | What It Does |
-|---------|-------------|
-| **Add Watermark** | Add text watermarks (CONFIDENTIAL, DRAFT, etc.) with custom size, opacity, rotation, and position. |
-| **Add Page Numbers** | Add page numbers to all pages (bottom-left, center, or right). |
-| **Batch Processing** | Process multiple PDFs at once with the same operation (rotate, watermark, page numbers, remove pages, extract pages). |
-
-### Free Tier Limits
-
-| Limit | Free Tier | Pro Tier |
-|-------|-----------|----------|
-| Operations per day | 10 | Unlimited |
-| Pages per PDF | 50 | Unlimited |
-| Multi-file processing | Merge only | All tools |
-| Batch Processing | Not available | Available |
-
----
 

@@ -83,8 +83,8 @@ Unlock additional features with a CleanVault Pro license.
 
 | Plan | Price | Best For |
 |------|-------|----------|
-| | **Personal** | $29.99/year | Individual users |
-| | **Corporate** | $99.99/year | Teams up to 10 users |
+| **Personal** | $29.99/year | Individual users |
+| **Corporate** | $99.99/year | Teams up to 10 users |
 
 **All plans include:** All free tools + Watermark + Page Numbers + 1 year of updates + priority support
 
@@ -111,12 +111,12 @@ If you don't see your license key after purchase, check your email for the licen
 
 #### How the License System Works
 
-CleanVault uses a **self-contained, cryptographically signed license system** that works entirely offline:
+CleanVault uses a **self-contained, hash-signed license key system** that works entirely offline:
 
 - **No backend required** — License validation happens 100% in your browser
 - **No database lookup** — All license information is embedded in the license key itself
 - **No API calls** — Works completely offline after initial page load
-- **Cryptographically signed** — Each license key contains a cryptographic signature that prevents tampering
+- **Hash-signed** — Each license key contains a signature that provides deterrence against casual tampering (not cryptographically secure)
 
 Each license key securely contains:
 - Plan type (Personal Pro or Corporate)
@@ -127,7 +127,7 @@ Each license key securely contains:
 
 The browser validates licenses by:
 1. Decoding the license key structure
-2. Verifying the cryptographic signature
+2. Verifying the signature
 3. Checking the expiration date
 4. Validating the license version
 
@@ -288,15 +288,10 @@ For any issues or questions, please check the documentation or open an issue on 
 
 ---
 
-
-
-
-
-## � Contact
+## Contact
 
 For inquiries, please visit our GitHub repository.
 
 ---
-
 
 *CleanVault — Your files never leave your computer.*
