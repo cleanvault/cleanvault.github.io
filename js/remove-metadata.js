@@ -51,7 +51,7 @@ async function handleRemoveMetadataFile(file) {
     if (!file || !validatePDF(file)) return;
     
     // Check limits
-    const limitCheck = LimitsManager.canUseTool('compress');
+    const limitCheck = LimitsManager.canUseTool('remove-metadata');
     if (!limitCheck.allowed) {
         showStatus('error', limitCheck.reason);
         return;
@@ -83,9 +83,9 @@ async function performRemoveMetadata() {
     try {
         setLoading(removeMetadataBtn, 'Removing...');
         showStatus('info', 'Removing metadata... This may take a moment.');
-        const result = await PDFTools.compressPDF(currentFiles[0]);
+        const result = await PDFTools.removeMetadataPDF(currentFiles[0]);
         LimitsManager.trackOperation();
-        const savings = ((1 - result.compressedSize / result.originalSize) * 100).toFixed(1);
+        const sizeChange = ((1 - result.newSize / result.originalSize) * 100).toFixed(1);
         PDFTools.downloadFile(result.data, result.name);
         showStatus('success', `Metadata removed successfully! Downloading...`);
         setTimeout(() => {

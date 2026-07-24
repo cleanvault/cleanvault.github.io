@@ -658,11 +658,11 @@ async function reorderPDF(pdfFile, newOrder) {
 }
 
 /**
- * Compress a PDF by removing metadata and optimizing
- * @param {File} pdfFile - The PDF file to compress
- * @returns {Promise<{name: string, data: Uint8Array, originalSize: number, compressedSize: number}>}
+ * Remove metadata from a PDF
+ * @param {File} pdfFile - The PDF file to remove metadata from
+ * @returns {Promise<{name: string, data: Uint8Array, originalSize: number, newSize: number}>}
  */
-async function compressPDF(pdfFile) {
+async function removeMetadataPDF(pdfFile) {
     const PDFLib = ensurePDFLib();
     
     try {
@@ -673,7 +673,7 @@ async function compressPDF(pdfFile) {
         // Load the PDF
         const pdf = await PDFLib.PDFDocument.load(arrayBuffer);
         
-        // Remove metadata to reduce size
+        // Remove metadata
         pdf.setTitle('');
         pdf.setAuthor('');
         pdf.setSubject('');
@@ -681,28 +681,28 @@ async function compressPDF(pdfFile) {
         pdf.setCreator('');
         pdf.setProducer('');
         
-        // Save with compression
-        const compressedPdfBytes = await pdf.save({
+        // Save the PDF
+        const newPdfBytes = await pdf.save({
             useObjectStreams: true,
             addDefaultPage: false
         });
         
-        const compressedSize = compressedPdfBytes.byteLength;
+        const newSize = newPdfBytes.byteLength;
         
         // Create filename
         const baseName = pdfFile.name.replace('.pdf', '');
-        const fileName = `${baseName}-compressed.pdf`;
+        const fileName = `${baseName}-metadata-removed.pdf`;
         
         return {
             name: fileName,
-            data: compressedPdfBytes,
+            data: newPdfBytes,
             originalSize: originalSize,
-            compressedSize: compressedSize
+            newSize: newSize
         };
         
     } catch (error) {
-        console.error('Error compressing PDF:', error);
-        throw new Error('Failed to compress PDF. Please ensure it is a valid PDF.');
+        console.error('Error removing metadata from PDF:', error);
+        throw new Error('Failed to remove metadata from PDF. Please ensure it is a valid PDF.');
     }
 }
 
@@ -761,7 +761,7 @@ if (typeof window !== 'undefined') {
         getPDFInfo,
         removePDFPages,
         reorderPDF,
-        compressPDF,
+        removeMetadataPDF,
         watermarkPDF,
         addPageNumbers,
         downloadFile,
