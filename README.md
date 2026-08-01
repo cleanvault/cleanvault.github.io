@@ -202,7 +202,7 @@ The browser validates licenses by:
 1. Click **Remove Metadata** on the homepage.
 2. Upload a PDF file.
 3. Click **Remove Metadata**.
-4. `metadata-removed.pdf` downloads with metadata removed.
+4. `cleaned.pdf` downloads with metadata removed.
 
 ### Add Watermark (Pro)
 

@@ -691,7 +691,7 @@ async function removeMetadataPDF(pdfFile) {
         
         // Create filename
         const baseName = pdfFile.name.replace('.pdf', '');
-        const fileName = `${baseName}-metadata-removed.pdf`;
+        const fileName = `${baseName}-cleaned.pdf`;
         
         return {
             name: fileName,
