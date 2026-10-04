@@ -260,7 +260,16 @@ open http://localhost:8000
 
 ### Do I need an internet connection?
 
-Only for the initial page load (to download the PDF library). After that, the tool works offline.
+Only for the initial page load. CleanVault has no external CDN dependency — the pdf-lib library is bundled with CleanVault and served from CleanVault itself.
+
+After at least one successful visit, your browser keeps a local cached copy of the application, so you can reopen CleanVault and use all of the PDF tools with no internet connection. Your PDFs are still processed entirely on your device.
+
+A few honest caveats:
+
+- A first-time visitor during a complete outage cannot use CleanVault, because there is nothing cached on their device yet.
+- Your browser can clear or evict that cached copy (storage pressure, private/incognito windows, or clearing browsing data).
+- A cached copy may stay on an older version until your browser receives an update while online.
+- Payment (Stripe) and the feedback form need a connection and will not work offline.
 
 ### What browsers are supported?
 

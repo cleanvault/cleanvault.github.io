@@ -196,11 +196,21 @@
 
         <div class="legal-section">
             <h2>5. External Dependencies</h2>
-            <p>CleanVault uses one external library:</p>
+            <p>CleanVault has no external runtime dependencies. The only third-party library it uses, pdf-lib, is bundled directly with CleanVault and served from this site. It is not loaded from a CDN or any other third-party host.</p>
             <ul>
-                <li><strong>pdf-lib</strong> — Loaded from unpkg.com CDN for PDF processing</li>
+                <li><strong>pdf-lib</strong> — Bundled with CleanVault and loaded from this site, not from a third-party CDN</li>
             </ul>
-            <p>This library is loaded over HTTPS and is cached by your browser. No data is sent to the CDN during normal operation — the library is only downloaded once when you first visit the site.</p>
+            <p>The library is pinned with a Subresource Integrity (SRI) hash, so your browser will refuse to run it unless the file matches the expected checksum.</p>
+
+            <h3>Offline use and local caching</h3>
+            <p>After you load CleanVault successfully at least once, your browser saves a local copy of the application — including the pdf-lib library — in its own storage cache. This allows CleanVault to reopen and continue working when this site is unreachable or when you have no internet connection.</p>
+            <ul>
+                <li>PDF files remain on your device and are never uploaded, including when CleanVault is used offline</li>
+                <li>A first-time visitor during a complete site outage cannot use CleanVault, because there is no cached copy on their device yet</li>
+                <li>Your browser may clear or evict this cached copy under storage pressure, in private/incognito windows, or when you clear browsing data</li>
+                <li>A cached copy may remain on an older version until your browser receives an update while online</li>
+                <li>Third-party services such as payment (Stripe) and the feedback form require an internet connection and will not work offline</li>
+            </ul>
         </div>
 
         <div class="legal-section">

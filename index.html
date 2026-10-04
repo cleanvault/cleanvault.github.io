@@ -456,7 +456,7 @@
     </main>
 
     <!-- Scripts -->
-    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="./vendor/pdf-lib.min.js" integrity="sha256-0f9a5cad07941f0826586c94e089d89b918c46e5c17cf2d5a3c6f666e3bc694f" crossorigin="anonymous"></script>
     <script src="js/pdf-tools.js"></script>
     <script src="js/license.js"></script>
     <script src="js/limits.js"></script>
@@ -471,3 +471,6 @@
     <script src="js/page-numbers.js"></script>
     <script src="js/remove.js"></script>
     <script src="js/batch.js"></script>
+
+    <!-- Offline support: registers the service worker (non-fatal if unsupported) -->
+    <script src="js/sw-register.js" defer></script>
