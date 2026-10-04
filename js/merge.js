@@ -68,9 +68,10 @@ function handleMergeFiles(files) {
 function updateMergeFileList() {
     const fileList = document.getElementById('merge-file-list');
     if (currentFiles.length === 0) { fileList.innerHTML = ''; return; }
-    let html = '<h4>Selected Files:</h4>';
-    currentFiles.forEach((file, index) => {
-        html += `
+    // Only the markup is built here. File names and sizes are written with
+    // textContent afterwards (the same safe pattern used by showPageInfo in
+    // ui.js), so a crafted file name can never inject HTML or script.
+    const items = currentFiles.map((file, index) => `
             <div class="file-item" draggable="true" data-index="${index}">
                 <div class="file-info">
                     <span class="drag-handle">☰</span>
@@ -79,14 +80,22 @@ function updateMergeFileList() {
                         <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                     </svg>
                     <div>
-                        <div class="file-name">${file.name}</div>
-                        <div class="file-size">${PDFTools.formatFileSize(file.size)}</div>
+                        <div class="file-name"></div>
+                        <div class="file-size"></div>
                     </div>
                 </div>
                 <button class="file-remove" onclick="removeMergeFile(${index})">×</button>
-            </div>`;
+            </div>`).join('');
+
+    fileList.innerHTML = `<h4>Selected Files:</h4>${items}`;
+
+    const nameEls = fileList.querySelectorAll('.file-name');
+    const sizeEls = fileList.querySelectorAll('.file-size');
+    currentFiles.forEach((file, i) => {
+        if (nameEls[i]) nameEls[i].textContent = file.name;
+        if (sizeEls[i]) sizeEls[i].textContent = PDFTools.formatFileSize(file.size);
     });
-    fileList.innerHTML = html;
+
     initializeDragAndDrop();
 }
 

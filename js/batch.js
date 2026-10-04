@@ -100,6 +100,19 @@ function initializeBatchTool() {
     const batchBtn = document.getElementById('batch-btn');
     const clearBtn = document.getElementById('clear-batch-btn');
 
+    // Always start from a clean slate. getBatchToolHTML() always renders
+    // "Rotate" as the checked option, so batchOperation must start as
+    // 'rotate' too - otherwise the visible radio button and the operation
+    // actually applied could disagree, and a previous visit's operation or
+    // files could silently carry over into a newly opened Batch tool.
+    batchOperation = 'rotate';
+    batchFiles = [];
+    const staleList = document.getElementById('batch-file-list');
+    if (staleList) staleList.innerHTML = '';
+    const staleActions = document.getElementById('batch-actions');
+    if (staleActions) staleActions.style.display = 'none';
+    if (fileInput) fileInput.value = '';
+
     // Check Pro status
     if (typeof LicenseManager !== 'undefined' && !LicenseManager.isActivated()) {
         showStatus('error', '⚠️ This is a Pro feature. Please upgrade to CleanVault Pro to unlock batch processing and all Pro features.');
@@ -159,9 +172,10 @@ function updateBatchFileList() {
         return;
     }
     
-    let html = '<h4>Selected Files:</h4>';
-    batchFiles.forEach((file, index) => {
-        html += `
+    // Only the markup is built here. File names and sizes are written with
+    // textContent afterwards (the same safe pattern used by showPageInfo in
+    // ui.js), so a crafted file name can never inject HTML or script.
+    const items = batchFiles.map((file, index) => `
             <div class="file-item">
                 <div class="file-info">
                     <svg class="file-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -169,14 +183,21 @@ function updateBatchFileList() {
                         <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                     </svg>
                     <div>
-                        <div class="file-name">${file.name}</div>
-                        <div class="file-size">${PDFTools.formatFileSize(file.size)}</div>
+                        <div class="file-name"></div>
+                        <div class="file-size"></div>
                     </div>
                 </div>
                 <button class="file-remove" onclick="removeBatchFile(${index})">×</button>
-            </div>`;
+            </div>`).join('');
+    
+    fileList.innerHTML = `<h4>Selected Files:</h4>${items}`;
+    
+    const nameEls = fileList.querySelectorAll('.file-name');
+    const sizeEls = fileList.querySelectorAll('.file-size');
+    batchFiles.forEach((file, i) => {
+        if (nameEls[i]) nameEls[i].textContent = file.name;
+        if (sizeEls[i]) sizeEls[i].textContent = PDFTools.formatFileSize(file.size);
     });
-    fileList.innerHTML = html;
 }
 
 function removeBatchFile(index) {
@@ -187,86 +208,143 @@ function removeBatchFile(index) {
     }
 }
 
+/**
+ * Parse a comma-separated list of 1-based page numbers.
+ *
+ * Every entry must be a positive whole number. Unlike the single-file tools,
+ * a malformed entry rejects the whole input instead of being silently
+ * discarded, so "2,abc,5" can never quietly become "2,5".
+ *
+ * @param {string} text - raw input from the page number field
+ * @returns {{ok: boolean, pages: number[], error: string}}
+ */
+function parseBatchPageList(text) {
+    const trimmed = (text || '').trim();
+    if (!trimmed) {
+        return { ok: false, pages: [], error: '' };
+    }
+
+    const parts = trimmed.split(',');
+    const pages = [];
+    for (const part of parts) {
+        const value = part.trim();
+        if (!/^\d+$/.test(value)) {
+            return {
+                ok: false,
+                pages: [],
+                error: `"${value}" is not a valid page number. Enter whole page numbers separated by commas, for example 1,3,5.`
+            };
+        }
+        const num = parseInt(value, 10);
+        if (num < 1) {
+            return {
+                ok: false,
+                pages: [],
+                error: 'Page numbers start at 1, so 0 and negative values are not valid.'
+            };
+        }
+        pages.push(num);
+    }
+
+    return { ok: true, pages, error: '' };
+}
+
 async function performBatch() {
     if (batchFiles.length === 0) {
         showStatus('error', 'Please select at least one PDF file');
         return;
     }
     
-    // Validate that required options are provided for remove and extract
-    if (batchOperation === 'remove') {
-        const removePages = document.getElementById('batch-remove-pages').value.trim();
-        if (!removePages) {
-            showStatus('error', 'Please enter page numbers to remove');
+    // Validate page input up front, before any file is processed, so a typo
+    // cannot destroy a long-running batch part way through.
+    let batchPages = null;
+    if (batchOperation === 'remove' || batchOperation === 'extract') {
+        const isRemove = batchOperation === 'remove';
+        const input = document.getElementById(isRemove ? 'batch-remove-pages' : 'batch-extract-pages');
+        const parsed = parseBatchPageList(input ? input.value : '');
+        if (!parsed.ok) {
+            showStatus('error', parsed.error ||
+                (isRemove ? 'Please enter page numbers to remove' : 'Please enter page numbers to extract'));
             return;
         }
-    }
-    
-    if (batchOperation === 'extract') {
-        const extractPages = document.getElementById('batch-extract-pages').value.trim();
-        if (!extractPages) {
-            showStatus('error', 'Please enter page numbers to extract');
-            return;
-        }
+        batchPages = parsed.pages;
     }
     
     const batchBtn = document.getElementById('batch-btn');
     
     try {
         setLoading(batchBtn, 'Processing...');
-        showStatus('info', `Processing ${batchFiles.length} file(s)... This may take a moment.`);
+        const total = batchFiles.length;
+        showStatus('info', `Processing ${total} file(s)... This may take a moment.`);
         
-        const results = [];
+        let succeeded = 0;
+        const failures = [];
         
         for (let i = 0; i < batchFiles.length; i++) {
             const file = batchFiles[i];
-            let result;
-            
-            switch (batchOperation) {
-                case 'rotate':
-                    const angle = parseInt(document.getElementById('batch-rotate-angle').value);
-                    result = await PDFTools.rotatePDF(file, angle);
-                    break;
-                case 'watermark':
-                    const watermarkText = document.getElementById('batch-watermark-text').value;
-                    const watermarkSize = parseInt(document.getElementById('batch-watermark-size').value);
-                    const watermarkOpacity = parseFloat(document.getElementById('batch-watermark-opacity').value);
-                    const watermarkPosition = document.getElementById('batch-watermark-position').value;
-                    result = await PDFTools.watermarkPDF(file, {
-                        text: watermarkText,
-                        fontSize: watermarkSize,
-                        opacity: watermarkOpacity,
-                        position: watermarkPosition
-                    });
-                    break;
-                case 'pagenumbers':
-                    const pnPosition = document.getElementById('batch-pagenumbers-position').value;
-                    result = await PDFTools.addPageNumbers(file, { position: pnPosition });
-                    break;
-                case 'remove':
-                    const removePagesText = document.getElementById('batch-remove-pages').value.trim();
-                    const pagesToRemove = removePagesText.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
-                    result = await PDFTools.removePDFPages(file, pagesToRemove);
-                    break;
-                case 'extract':
-                    const extractPagesText = document.getElementById('batch-extract-pages').value.trim();
-                    const pagesToExtract = extractPagesText.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
-                    result = await PDFTools.extractPages(file, pagesToExtract);
-                    break;
+            try {
+                let result;
+                switch (batchOperation) {
+                    case 'rotate': {
+                        const angle = parseInt(document.getElementById('batch-rotate-angle').value, 10);
+                        result = await PDFTools.rotatePDF(file, angle);
+                        break;
+                    }
+                    case 'watermark': {
+                        const watermarkText = document.getElementById('batch-watermark-text').value;
+                        const watermarkSize = parseInt(document.getElementById('batch-watermark-size').value, 10);
+                        const watermarkOpacity = parseFloat(document.getElementById('batch-watermark-opacity').value);
+                        const watermarkPosition = document.getElementById('batch-watermark-position').value;
+                        result = await PDFTools.watermarkPDF(file, {
+                            text: watermarkText,
+                            fontSize: watermarkSize,
+                            opacity: watermarkOpacity,
+                            position: watermarkPosition
+                        });
+                        break;
+                    }
+                    case 'pagenumbers': {
+                        const pnPosition = document.getElementById('batch-pagenumbers-position').value;
+                        result = await PDFTools.addPageNumbers(file, { position: pnPosition });
+                        break;
+                    }
+                    case 'remove': {
+                        result = await PDFTools.removePDFPages(file, batchPages);
+                        break;
+                    }
+                    case 'extract': {
+                        result = await PDFTools.extractPages(file, batchPages);
+                        break;
+                    }
+                    default:
+                        throw new Error(`Unsupported batch operation: ${batchOperation}`);
+                }
+                
+                // Download each result immediately, then drop the reference,
+                // so a large batch never retains every generated PDF at once.
+                PDFTools.downloadFile(result.data, result.name);
+                result = null;
+                succeeded++;
+            } catch (error) {
+                // One bad file must not discard the work already completed.
+                failures.push({
+                    name: file.name,
+                    message: error && error.message ? error.message : String(error)
+                });
             }
-            
-            results.push(result);
+            showStatus('info', `Processed ${i + 1} of ${total} file(s)...`);
         }
         
-        // Track operations
+        // Track operations: one batch run counts as a single operation.
         LimitsManager.trackOperation();
         
-        // Download all results
-        results.forEach((result, index) => {
-            setTimeout(() => PDFTools.downloadFile(result.data, result.name), index * 500);
-        });
-        
-        showStatus('success', `Successfully processed ${results.length} file(s)! Downloading...`);
+        if (failures.length === 0) {
+            showStatus('success', `Successfully processed ${succeeded} file(s)! Downloading...`);
+        } else {
+            const detail = failures.map(f => `${f.name} (${f.message})`).join('; ');
+            showStatus('error',
+                `Processed ${succeeded} of ${total} file(s). ${failures.length} failed: ${detail}`);
+        }
         
         setTimeout(() => {
             batchFiles = [];

@@ -525,12 +525,15 @@ async function watermarkPDF(pdfFile, options) {
             throw new Error('Watermark text is required');
         }
         
-        if (fontSize < 8 || fontSize > 200) {
-            throw new Error('Font size must be between 8 and 200');
+        // Number.isFinite rejects NaN and Infinity. Without it, a comparison
+        // against NaN is always false, so a blank numeric input would slip
+        // past these range checks and fail deep inside pdf-lib instead.
+        if (!Number.isFinite(fontSize) || fontSize < 8 || fontSize > 200) {
+            throw new Error('Font size must be a number between 8 and 200');
         }
         
-        if (opacity < 0 || opacity > 1) {
-            throw new Error('Opacity must be between 0 and 1');
+        if (!Number.isFinite(opacity) || opacity < 0 || opacity > 1) {
+            throw new Error('Opacity must be a number between 0 and 1');
         }
         
         // Embed a standard font (Helvetica)
