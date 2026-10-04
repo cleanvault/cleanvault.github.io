@@ -48,6 +48,9 @@ function initializeExtractTool() {
         document.getElementById('extract-page-info').style.display = 'none';
         document.getElementById('extract-pages-group').style.display = 'none';
         document.getElementById('extract-actions').style.display = 'none';
+        // Reset the page numbers too, otherwise stale entries silently carry
+        // over to the next PDF the customer selects.
+        document.getElementById('extract-pages').value = '';
         fileInput.value = '';
     });
 }
@@ -81,12 +84,62 @@ async function handleExtractFile(file) {
     }
 }
 
+/**
+ * Parse a comma-separated list of 1-based page numbers.
+ *
+ * Every entry must be a positive whole number. parseInt() is deliberately not
+ * used here: it is prefix-based and would silently rewrite "1abc" to 1,
+ * "3.9" to 3 and "0x10" to 16, and a filter would silently discard malformed
+ * entries. Any invalid entry rejects the whole input instead.
+ *
+ * Duplicates and the requested order are preserved.
+ *
+ * @param {string} text - raw input from the page number field
+ * @returns {{ok: boolean, pages: number[], error: string}}
+ */
+function parseExtractPageList(text) {
+    const trimmed = (text || '').trim();
+    if (!trimmed) {
+        return { ok: false, pages: [], error: '' };
+    }
+
+    const parts = trimmed.split(',');
+    const pages = [];
+    for (const part of parts) {
+        const value = part.trim();
+        if (!/^\d+$/.test(value)) {
+            return {
+                ok: false,
+                pages: [],
+                error: `"${value}" is not a valid page number. Enter whole page numbers separated by commas, for example 1,3,5.`
+            };
+        }
+        const num = parseInt(value, 10);
+        if (num < 1) {
+            return {
+                ok: false,
+                pages: [],
+                error: 'Page numbers start at 1, so 0 and negative values are not valid.'
+            };
+        }
+        pages.push(num);
+    }
+
+    return { ok: true, pages, error: '' };
+}
+
 async function performExtract() {
     if (!currentFiles[0]) { showStatus('error', 'Please select a PDF file first'); return; }
-    const pagesText = document.getElementById('extract-pages').value.trim();
-    if (!pagesText) { showStatus('error', 'Please enter page numbers'); return; }
-    const pageNumbers = pagesText.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
-    if (pageNumbers.length === 0) { showStatus('error', 'Please enter valid page numbers'); return; }
+
+    // Validate the whole input before processing so a typo can never be
+    // silently corrected into the wrong set of pages.
+    const pagesInput = document.getElementById('extract-pages');
+    const parsed = parseExtractPageList(pagesInput ? pagesInput.value : '');
+    if (!parsed.ok) {
+        showStatus('error', parsed.error || 'Please enter page numbers');
+        return;
+    }
+    const pageNumbers = parsed.pages;
 
     const extractBtn = document.getElementById('extract-btn');
     try {
@@ -95,12 +148,13 @@ async function performExtract() {
         const result = await PDFTools.extractPages(currentFiles[0], pageNumbers);
         LimitsManager.trackOperation();
         PDFTools.downloadFile(result.data, result.name);
-        showStatus('success', 'Pages extracted successfully! Downloading...');
+        showStatus('success', 'Pages extracted successfully!');
         setTimeout(() => {
             currentFiles = [];
             document.getElementById('extract-page-info').style.display = 'none';
             document.getElementById('extract-pages-group').style.display = 'none';
             document.getElementById('extract-actions').style.display = 'none';
+            document.getElementById('extract-pages').value = '';
             document.getElementById('extract-file-input').value = '';
         }, 2000);
     } catch (error) {
