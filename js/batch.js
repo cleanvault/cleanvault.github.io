@@ -339,7 +339,7 @@ async function performBatch() {
         LimitsManager.trackOperation();
         
         if (failures.length === 0) {
-            showStatus('success', `Successfully processed ${succeeded} file(s)! Downloading...`);
+            showStatus('success', `Successfully processed ${succeeded} file(s)!`);
         } else {
             const detail = failures.map(f => `${f.name} (${f.message})`).join('; ');
             showStatus('error',
