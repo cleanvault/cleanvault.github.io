@@ -2,6 +2,11 @@
  * CleanVault - Remove Metadata Tool Module
  */
 
+// True while a Remove Metadata operation is running. Guards against a
+// second concurrent invocation performing the work (and spending an operation)
+// a second time. Cleared in performRemoveMetadata()'s outer finally.
+let removeMetadataInFlight = false;
+
 function getRemoveMetadataToolHTML() {
     return `
         <div class="tool-header">
@@ -78,25 +83,65 @@ async function handleRemoveMetadataFile(file) {
 }
 
 async function performRemoveMetadata() {
-    if (!currentFiles[0]) { showStatus('error', 'Please select a PDF file first'); return; }
-    const removeMetadataBtn = document.getElementById('remove-metadata-btn');
+    // Re-entrancy guard. The button is disabled while loading, but that only
+    // protects genuine UI clicks - direct or programmatic concurrent calls
+    // would otherwise run twice, producing two downloads and consuming two of
+    // the user's daily operations.
+    if (removeMetadataInFlight) return;
+    removeMetadataInFlight = true;
+
     try {
-        setLoading(removeMetadataBtn, 'Removing...');
-        showStatus('info', 'Removing metadata... This may take a moment.');
-        const result = await PDFTools.removeMetadataPDF(currentFiles[0]);
-        LimitsManager.trackOperation();
-        const sizeChange = ((1 - result.newSize / result.originalSize) * 100).toFixed(1);
-        PDFTools.downloadFile(result.data, result.name);
-        showStatus('success', `Metadata removed successfully! Downloading...`);
-        setTimeout(() => {
-            currentFiles = [];
-            document.getElementById('remove-metadata-info').style.display = 'none';
-            document.getElementById('remove-metadata-actions').style.display = 'none';
-            document.getElementById('remove-metadata-file-input').value = '';
-        }, 2000);
-    } catch (error) {
-        showStatus('error', error.message);
+        if (!currentFiles[0]) { showStatus('error', 'Please select a PDF file first'); return; }
+
+        // Re-check the daily allowance at execution time. The limit is shared
+        // across every tool, so it may have been reached after this file was
+        // selected - for example by another operation in a second tab.
+        const limitCheck = LimitsManager.canUseTool('remove-metadata');
+        if (!limitCheck.allowed) {
+            showStatus('error', limitCheck.reason);
+            return;
+        }
+
+        // Re-check the page limit at execution time as defence in depth, using
+        // the page count read from the file we are about to process rather than
+        // anything cached at selection time.
+        const currentFile = currentFiles[0];
+        let info;
+        try {
+            info = await PDFTools.getPDFInfo(currentFile);
+        } catch (error) {
+            showStatus('error', error.message);
+            return;
+        }
+        const pageCheck = LimitsManager.canProcessFile(currentFile, info.pageCount);
+        if (!pageCheck.allowed) {
+            showStatus('error', pageCheck.reason);
+            return;
+        }
+
+        const removeMetadataBtn = document.getElementById('remove-metadata-btn');
+        try {
+            setLoading(removeMetadataBtn, 'Removing...');
+            showStatus('info', 'Removing metadata... This may take a moment.');
+            const result = await PDFTools.removeMetadataPDF(currentFile);
+            PDFTools.downloadFile(result.data, result.name);
+            // Count the operation only once the cleaned PDF has actually been
+            // handed over. A failed transformation or a failed download then
+            // costs the user nothing.
+            LimitsManager.trackOperation();
+            showStatus('success', `Metadata removed successfully! Downloading...`);
+            setTimeout(() => {
+                currentFiles = [];
+                document.getElementById('remove-metadata-info').style.display = 'none';
+                document.getElementById('remove-metadata-actions').style.display = 'none';
+                document.getElementById('remove-metadata-file-input').value = '';
+            }, 2000);
+        } catch (error) {
+            showStatus('error', error.message);
+        } finally {
+            unsetLoading(removeMetadataBtn, 'Remove Metadata');
+        }
     } finally {
-        unsetLoading(removeMetadataBtn, 'Remove Metadata');
+        removeMetadataInFlight = false;
     }
 }
