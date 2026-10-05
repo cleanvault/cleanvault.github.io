@@ -2,6 +2,11 @@
  * CleanVault - Page Numbers Tool Module (Pro)
  */
 
+// True while an Add Page Numbers operation is running. Guards against a
+// second concurrent invocation performing the work (and spending an operation)
+// a second time. Cleared in performPageNumbers()'s outer finally.
+let pageNumbersInFlight = false;
+
 function getPageNumbersToolHTML() {
     return `
         <div class="tool-header">
@@ -98,28 +103,55 @@ async function handlePageNumbersFile(file) {
 }
 
 async function performPageNumbers() {
-    if (!currentFiles[0]) { showStatus('error', 'Please select a PDF file first'); return; }
-    const selectedPosition = document.querySelector('input[name="page-position"]:checked').value;
-    const options = { position: selectedPosition, format: 'Page {n}' };
+    // Re-entrancy guard. The button is disabled while loading, but that only
+    // protects genuine UI clicks - direct or programmatic concurrent calls
+    // would otherwise run twice, producing two downloads and consuming two of
+    // the user's daily operations.
+    if (pageNumbersInFlight) return;
+    pageNumbersInFlight = true;
 
-    const pageNumbersBtn = document.getElementById('pagenumbers-btn');
     try {
-        setLoading(pageNumbersBtn, 'Adding Page Numbers...');
-        showStatus('info', 'Adding page numbers... This may take a moment.');
-        const result = await PDFTools.addPageNumbers(currentFiles[0], options);
-        LimitsManager.trackOperation();
-        PDFTools.downloadFile(result.data, result.name);
-        showStatus('success', 'Page numbers added successfully! Downloading...');
-        setTimeout(() => {
-            currentFiles = [];
-            document.getElementById('pagenumbers-info').style.display = 'none';
-            document.getElementById('pagenumbers-options-group').style.display = 'none';
-            document.getElementById('pagenumbers-actions').style.display = 'none';
-            document.getElementById('pagenumbers-file-input').value = '';
-        }, 2000);
-    } catch (error) {
-        showStatus('error', error.message);
+        if (!currentFiles[0]) { showStatus('error', 'Please select a PDF file first'); return; }
+
+        // Re-check Pro status at execution time. The licence may have been
+        // deactivated or may have expired since the file was selected.
+        if (typeof LicenseManager !== 'undefined' && !LicenseManager.isActivated()) {
+            showStatus('error', '⚠️ This is a Pro feature. Please upgrade to CleanVault Pro to unlock page numbers and all Pro features.');
+            return;
+        }
+
+        // Re-check the daily allowance at execution time. The limit may have
+        // been reached after this file was selected.
+        const limitCheck = LimitsManager.canUseTool('pagenumbers');
+        if (!limitCheck.allowed) {
+            showStatus('error', limitCheck.reason);
+            return;
+        }
+
+        const selectedPosition = document.querySelector('input[name="page-position"]:checked').value;
+        const options = { position: selectedPosition, format: 'Page {n}' };
+
+        const pageNumbersBtn = document.getElementById('pagenumbers-btn');
+        try {
+            setLoading(pageNumbersBtn, 'Adding Page Numbers...');
+            showStatus('info', 'Adding page numbers... This may take a moment.');
+            const result = await PDFTools.addPageNumbers(currentFiles[0], options);
+            LimitsManager.trackOperation();
+            PDFTools.downloadFile(result.data, result.name);
+            showStatus('success', 'Page numbers added successfully!');
+            setTimeout(() => {
+                currentFiles = [];
+                document.getElementById('pagenumbers-info').style.display = 'none';
+                document.getElementById('pagenumbers-options-group').style.display = 'none';
+                document.getElementById('pagenumbers-actions').style.display = 'none';
+                document.getElementById('pagenumbers-file-input').value = '';
+            }, 2000);
+        } catch (error) {
+            showStatus('error', error.message);
+        } finally {
+            unsetLoading(pageNumbersBtn, 'Add Page Numbers');
+        }
     } finally {
-        unsetLoading(pageNumbersBtn, 'Add Page Numbers');
+        pageNumbersInFlight = false;
     }
 }

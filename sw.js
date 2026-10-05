@@ -44,7 +44,7 @@
 
 'use strict';
 
-const CACHE_VERSION = 'cleanvault-v6';
+const CACHE_VERSION = 'cleanvault-v7';
 const CACHE_NAME = CACHE_VERSION;
 /*
  * Complete application shell required to launch and operate CleanVault.
