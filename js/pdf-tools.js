@@ -766,7 +766,8 @@ async function watermarkPDF(pdfFile, options) {
 /**
  * Reorder pages in a PDF
  * @param {File} pdfFile - The PDF file to reorder
- * @param {Array<number>} newOrder - Array of page numbers in desired order (1-based)
+ * @param {Array<number>} newOrder - Page numbers in the desired order (1-based).
+ *   Must be a permutation of the document's pages: every page exactly once.
  * @returns {Promise<{name: string, data: Uint8Array}>}
  */
 async function reorderPDF(pdfFile, newOrder) {
@@ -779,23 +780,60 @@ async function reorderPDF(pdfFile, newOrder) {
         
         const totalPages = pdf.getPageCount();
         
-        if (!newOrder || newOrder.length === 0) {
-            throw new Error('Please specify page order');
+        if (!Array.isArray(newOrder) || newOrder.length === 0) {
+            throw userFacingError('Please specify page order');
         }
         
-        // Convert to 0-based indices and validate. Ordering and duplicates are
-        // intentional and left to the caller; only each page number itself is
-        // validated.
-        const pageIndices = newOrder.map(num => toPageIndex(num, totalPages));
+        // Validate each page number first so the precise per-page message wins
+        // (e.g. "Page 6 is out of bounds..." rather than a count complaint).
+        // An explicit loop, not map(): map() skips holes in sparse arrays,
+        // which would let undefined indices through to insertPage() and
+        // silently swap a real page for a blank one.
+        const pageIndices = [];
+        for (let i = 0; i < newOrder.length; i++) {
+            pageIndices.push(toPageIndex(newOrder[i], totalPages));
+        }
         
-        // Create new PDF with pages in specified order
-        const newPdf = await PDFLib.PDFDocument.create();
-        const pages = await newPdf.copyPages(pdf, pageIndices);
-        pages.forEach((page) => {
-            newPdf.addPage(page);
-        });
+        // A reorder is a permutation. A short order would silently drop pages
+        // from the output and a repeated page number would silently duplicate
+        // one - data loss the user never asked for - so both are rejected.
+        // (Length and range together already imply a permutation; the explicit
+        // duplicate check produces the clearest message when they coincide.)
+        if (newOrder.length !== totalPages) {
+            throw userFacingError('The new order must list every page exactly once. Expected ' +
+                totalPages + ' page number' + (totalPages === 1 ? '' : 's') +
+                ', got ' + newOrder.length + '.');
+        }
+        const seen = new Set();
+        for (let i = 0; i < pageIndices.length; i++) {
+            if (seen.has(pageIndices[i])) {
+                throw userFacingError('Page ' + newOrder[i] + ' appears more than once in the new order.');
+            }
+            seen.add(pageIndices[i]);
+        }
         
-        const newPdfBytes = await newPdf.save();
+        // Reorder within the loaded document instead of copying pages into a
+        // brand new one. A new document drops everything that lives in the
+        // catalog rather than on the page - notably AcroForm fields, but also
+        // outlines, embedded files, named destinations and XMP metadata - which
+        // would otherwise be silently destroyed even though every page survives.
+        //
+        // removePage() only unlinks a leaf from the page tree (the page object
+        // stays in the document context); insertPage() relinks a page of this
+        // same document at the requested index. Unlink every page first, then
+        // relink in the requested order, so no page ref is ever in the tree
+        // twice and intermediate states stay consistent.
+        const originalPages = pdf.getPages();
+        const orderedPages = pageIndices.map(index => originalPages[index]);
+
+        for (let i = originalPages.length - 1; i >= 0; i--) {
+            pdf.removePage(i);
+        }
+        for (let i = 0; i < orderedPages.length; i++) {
+            pdf.insertPage(i, orderedPages[i]);
+        }
+
+        const newPdfBytes = await pdf.save();
         
         const baseName = pdfFile.name.replace('.pdf', '');
         const fileName = `${baseName}-reordered.pdf`;

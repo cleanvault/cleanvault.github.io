@@ -2,6 +2,11 @@
  * CleanVault - Reorder Pages Tool Module
  */
 
+// True while a Reorder Pages operation is running. Guards against a second
+// concurrent invocation performing the work (and spending an operation) a
+// second time. Cleared in performReorder()'s outer finally.
+let reorderInFlight = false;
+
 function getReorderToolHTML() {
     return `
         <div class="tool-header">
@@ -19,7 +24,7 @@ function getReorderToolHTML() {
             <p class="form-hint">Select one PDF file to reorder pages</p>
             <input type="file" id="reorder-file-input" accept=".pdf">
         </div>
-        <div class="page-info" id="reorder-info" style="display: none;">
+        <div class="page-info" id="reorder-page-info" style="display: none;">
             <strong>File:</strong> <span id="reorder-file-name"></span><br>
             <strong>Total Pages:</strong> <span id="reorder-total-pages"></span>
         </div>
@@ -45,9 +50,12 @@ function initializeReorderTool() {
     reorderBtn.addEventListener('click', async () => await performReorder());
     clearBtn.addEventListener('click', () => {
         currentFiles = [];
-        document.getElementById('reorder-info').style.display = 'none';
+        document.getElementById('reorder-page-info').style.display = 'none';
         document.getElementById('reorder-pages-group').style.display = 'none';
         document.getElementById('reorder-actions').style.display = 'none';
+        // Drop the rendered page items as well, so stale items from the
+        // cleared file can never be read back by a later performReorder().
+        document.getElementById('reorder-pages-list').innerHTML = '';
         fileInput.value = '';
     });
 }
@@ -94,7 +102,9 @@ async function handleReorderFile(file) {
 }
 
 function initializePageReorderDragDrop() {
-    const pageItems = document.querySelectorAll('.page-item');
+    // Scoped to this tool's list: document-global '.page-item' selectors could
+    // pick up markup from another tool and silently corrupt the new order.
+    const pageItems = document.querySelectorAll('#reorder-pages-list .page-item');
     let draggedItem = null;
     pageItems.forEach(item => {
         item.addEventListener('dragstart', (e) => { draggedItem = item; item.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
@@ -113,29 +123,74 @@ function initializePageReorderDragDrop() {
 }
 
 async function performReorder() {
-    if (!currentFiles[0]) { showStatus('error', 'Please select a PDF file first'); return; }
-    const pageItems = document.querySelectorAll('.page-item');
-    const newOrder = Array.from(pageItems).map(item => parseInt(item.getAttribute('data-page')));
-    if (newOrder.length === 0) { showStatus('error', 'No pages to reorder'); return; }
+    // Re-entrancy guard. The button is disabled while loading, but that only
+    // protects genuine UI clicks - direct or programmatic concurrent calls
+    // would otherwise run twice, producing two downloads and consuming two of
+    // the user's daily operations.
+    if (reorderInFlight) return;
+    reorderInFlight = true;
 
-    const reorderBtn = document.getElementById('reorder-btn');
     try {
-        setLoading(reorderBtn, 'Reordering...');
-        showStatus('info', 'Reordering pages... This may take a moment.');
-        const result = await PDFTools.reorderPDF(currentFiles[0], newOrder);
-        LimitsManager.trackOperation();
-        PDFTools.downloadFile(result.data, result.name);
-        showStatus('success', 'Pages reordered successfully! Downloading...');
-        setTimeout(() => {
-            currentFiles = [];
-            document.getElementById('reorder-info').style.display = 'none';
-            document.getElementById('reorder-pages-group').style.display = 'none';
-            document.getElementById('reorder-actions').style.display = 'none';
-            document.getElementById('reorder-file-input').value = '';
-        }, 2000);
-    } catch (error) {
-        showStatus('error', error.message);
+        if (!currentFiles[0]) { showStatus('error', 'Please select a PDF file first'); return; }
+
+        // Re-check the daily allowance at execution time. The limit is shared
+        // across every tool and stored in localStorage, so it may have been
+        // reached after this file was selected - for example by an operation
+        // performed in a second tab.
+        const limitCheck = LimitsManager.canUseTool('reorder');
+        if (!limitCheck.allowed) {
+            showStatus('error', limitCheck.reason);
+            return;
+        }
+
+        // Re-check the page limit at execution time as defence in depth, using
+        // the page count read from the file we are about to process rather
+        // than the value cached at selection time.
+        const currentFile = currentFiles[0];
+        let info;
+        try {
+            info = await PDFTools.getPDFInfo(currentFile);
+        } catch (error) {
+            showStatus('error', error.message);
+            return;
+        }
+        const pageCheck = LimitsManager.canProcessFile(currentFile, info.pageCount);
+        if (!pageCheck.allowed) {
+            showStatus('error', pageCheck.reason);
+            return;
+        }
+
+        // Scoped to this tool's list (see initializePageReorderDragDrop) so
+        // foreign markup can never enter the order.
+        const pageItems = document.querySelectorAll('#reorder-pages-list .page-item');
+        const newOrder = Array.from(pageItems).map(item => parseInt(item.getAttribute('data-page'), 10));
+        if (newOrder.length === 0) { showStatus('error', 'No pages to reorder'); return; }
+
+        const reorderBtn = document.getElementById('reorder-btn');
+        try {
+            setLoading(reorderBtn, 'Reordering...');
+            showStatus('info', 'Reordering pages... This may take a moment.');
+            const result = await PDFTools.reorderPDF(currentFile, newOrder);
+            PDFTools.downloadFile(result.data, result.name);
+            // Count the operation only once the resulting PDF has actually been
+            // handed over. A failed transformation or a failed download then
+            // costs the user nothing.
+            LimitsManager.trackOperation();
+            showStatus('success', 'Pages reordered successfully! Downloading...');
+            setTimeout(() => {
+                currentFiles = [];
+                document.getElementById('reorder-page-info').style.display = 'none';
+                document.getElementById('reorder-pages-group').style.display = 'none';
+                document.getElementById('reorder-actions').style.display = 'none';
+                document.getElementById('reorder-pages-list').innerHTML = '';
+                document.getElementById('reorder-file-input').value = '';
+            }, 2000);
+        } catch (error) {
+            showStatus('error', error.message);
+        } finally {
+            unsetLoading(reorderBtn, 'Reorder PDF');
+        }
     } finally {
-        unsetLoading(reorderBtn, 'Reorder PDF');
+        reorderInFlight = false;
     }
 }
