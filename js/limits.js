@@ -12,6 +12,11 @@ const LimitsManager = (function() {
     
     // Free tier limits
     const FREE_LIMITS = {
+        // Single-file tools are structurally single-file: their file input has
+        // no "multiple" attribute and they replace currentFiles rather than
+        // appending, so this is documentation of behaviour rather than a value
+        // compared at runtime. Merge (the documented exception) and Batch both
+        // use a multi-select input and are gated separately.
         maxFilesPerOperation: 1,  // Except Merge PDF
         maxPagesPerPDF: 50,
         maxOperationsPerDay: 10,
@@ -52,8 +57,23 @@ const LimitsManager = (function() {
                 return freshStats;
             }
             
-            const stats = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{"count":0}');
-            return stats;
+            // Read and normalise. localStorage is user-writable, so the stored
+            // value can be missing, a string, fractional, negative or otherwise
+            // malformed. Normalising here keeps every downstream comparison
+            // numeric and stops trackOperation() from concatenating onto a
+            // string ("9" + 1 === "91"), which would otherwise let a corrupted
+            // counter drift forever without ever reaching the limit.
+            let parsed;
+            try {
+                parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{"count":0}');
+            } catch (error) {
+                parsed = null;
+            }
+            
+            const rawCount = (parsed && typeof parsed === 'object') ? parsed.count : 0;
+            const count = Number.isFinite(rawCount) ? Math.max(0, Math.floor(rawCount)) : 0;
+            
+            return { count: count, date: today };
         } catch (error) {
             return { count: 0, date: getTodayString() };
         }
@@ -97,7 +117,7 @@ const LimitsManager = (function() {
         if (toolName === 'batch' && !limits.batchProcessing) {
             return {
                 allowed: false,
-                reason: 'Free plan limit reached. Upgrade to Pro to continue processing PDFs.'
+                reason: 'Batch Processing is a Pro feature. Upgrade to Pro to unlock batch processing.'
             };
         }
         
@@ -106,12 +126,23 @@ const LimitsManager = (function() {
     
     /**
      * Check if a file can be processed (page count limit)
-     * @param {File} file - PDF file to check
+     *
+     * @param {File} file - The PDF file (kept for call-site clarity and future
+     *   per-file rules; the tier limit is currently page-count based)
      * @param {number} pageCount - Number of pages in the PDF
      * @returns {Object} - { allowed: boolean, reason: string|null }
      */
     function canProcessFile(file, pageCount) {
         const limits = getLimits();
+        
+        // Treat a missing or malformed page count as not processable rather
+        // than letting an undefined comparison fall through as "allowed".
+        if (!Number.isFinite(pageCount) || pageCount < 1) {
+            return {
+                allowed: false,
+                reason: 'Could not determine the number of pages in this PDF.'
+            };
+        }
         
         if (pageCount > limits.maxPagesPerPDF) {
             return {

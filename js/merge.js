@@ -120,6 +120,20 @@ async function performMerge() {
     try {
         setLoading(mergeBtn, 'Merging...');
         showStatus('info', 'Merging PDFs... This may take a moment.');
+        
+        // Check the page limit for every input file. Merge is exempt from the
+        // one-file limit but NOT from the per-PDF page limit, so a Free user
+        // must not be able to merge oversized PDFs.
+        for (const file of currentFiles) {
+            const info = await PDFTools.getPDFInfo(file);
+            const pageCheck = LimitsManager.canProcessFile(file, info.pageCount);
+            if (!pageCheck.allowed) {
+                unsetLoading(mergeBtn, 'Merge PDFs');
+                showStatus('error', `"${file.name}": ${pageCheck.reason}`);
+                return;
+            }
+        }
+        
         const mergedPdfBytes = await PDFTools.mergePDFs(currentFiles);
         LimitsManager.trackOperation();
         PDFTools.downloadFile(mergedPdfBytes, 'merged.pdf');
