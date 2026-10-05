@@ -518,24 +518,29 @@ async function removePDFPages(pdfFile, pagesToRemove) {
         // Convert to 0-based indices and validate
         const removeIndices = pagesToRemove.map(num => toPageIndex(num, totalPages));
         
-        // Get all page indices
-        const allIndices = Array.from({ length: totalPages }, (_, i) => i);
-        
-        // Filter out pages to remove
-        const keepIndices = allIndices.filter(index => !removeIndices.includes(index));
-        
-        if (keepIndices.length === 0) {
-            throw new Error('Cannot remove all pages from the PDF');
+        // A page listed twice is still one page. De-duplicate before the
+        // all-pages check so that e.g. [1,1] on a 1-page PDF is correctly
+        // rejected as removing everything rather than passing the check.
+        const uniqueIndices = Array.from(new Set(removeIndices));
+
+        if (uniqueIndices.length >= totalPages) {
+            throw userFacingError('Cannot remove all pages from the PDF');
         }
-        
-        // Create new PDF with remaining pages
-        const newPdf = await PDFLib.PDFDocument.create();
-        const pages = await newPdf.copyPages(pdf, keepIndices);
-        pages.forEach((page) => {
-            newPdf.addPage(page);
-        });
-        
-        const newPdfBytes = await newPdf.save();
+
+        // Remove from the loaded document rather than copying the surviving
+        // pages into a brand new one. A new document drops everything that
+        // lives in the catalog rather than on the page - notably AcroForm
+        // fields, which would otherwise be silently destroyed even when the
+        // removed page did not contain them.
+        //
+        // Highest index first: removing a page shifts the indexes of every
+        // later page, so working downwards keeps the remaining targets valid.
+        uniqueIndices.sort((a, b) => b - a);
+        for (const index of uniqueIndices) {
+            pdf.removePage(index);
+        }
+
+        const newPdfBytes = await pdf.save();
         
         const baseName = pdfFile.name.replace('.pdf', '');
         const fileName = `${baseName}-pages-removed.pdf`;
@@ -547,7 +552,10 @@ async function removePDFPages(pdfFile, pagesToRemove) {
         
     } catch (error) {
         console.error('Error removing pages:', error);
-        throw error;
+        if (error && error.isUserFacing) throw error;
+        // Keep pdf-lib parse/internal detail out of the UI; actionable
+        // page-number and all-pages errors are re-thrown unchanged above.
+        throw new Error('Failed to remove pages from the PDF. Please ensure it is a valid PDF.');
     }
 }
 
