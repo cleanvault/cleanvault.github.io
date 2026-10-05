@@ -284,13 +284,13 @@ function initializeLicenseUI() {
     const licenseInput = document.getElementById('license-input');
 
     if (activateBtn) {
-        activateBtn.addEventListener('click', () => {
+        activateBtn.addEventListener('click', async () => {
             const licenseKey = licenseInput.value.trim();
             if (!licenseKey) {
                 showActivationStatus('Please enter a license key', 'error');
                 return;
             }
-            const result = LicenseManager.activate(licenseKey);
+            const result = await LicenseManager.activate(licenseKey);
             if (result.success) {
                 showActivationStatus(result.message, 'success');
                 licenseInput.value = '';

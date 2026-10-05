@@ -67,6 +67,12 @@ function initializeWatermarkTool() {
     const watermarkBtn = document.getElementById('watermark-btn');
     const clearBtn = document.getElementById('clear-watermark-btn');
 
+    // Check Pro status (same gate placement as the other Pro tools)
+    if (typeof LicenseManager !== 'undefined' && !LicenseManager.isActivated()) {
+        showStatus('error', '⚠️ This is a Pro feature. Please upgrade to CleanVault Pro to unlock watermarks and all Pro features.');
+        return;
+    }
+
     setupUploadArea('watermark-upload-area', 'watermark-file-input', (file) => handleWatermarkFile(file));
     watermarkBtn.addEventListener('click', async () => await performWatermark());
     clearBtn.addEventListener('click', () => {

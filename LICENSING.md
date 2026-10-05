@@ -110,30 +110,48 @@ If you don't see your license key after purchase:
 
 ### License Key Format
 
-Each license key is self-contained and hash-signed:
+Each license key is self-contained and signed with SHA-256:
 
 **Format:** `CV-PRO-{VERSION}{PLAN}-{RANDOM}-{YYYYMMDD}{SIG}`
 
-**Example:** `CV-PRO-01PRO-A1B2C3D4-20271231ABCDEF1234567890`
+**Example:** `CV-PRO-01PRO-A1B2C3D4-20271231<SHA-256 signature, 64 hex chars>`
 
 **Components:**
 - **VERSION** (2 chars): License version (currently "01")
-- **PLAN** (3 chars): Plan type ("PRO" or "COR")
+- **PLAN** (3 chars): Plan type ("PRO" Personal or "COR" Corporate)
 - **RANDOM** (8 hex chars): Unique identifier
 - **YYYYMMDD** (8 chars): Expiration date
-- **SIG** (16 hex chars): Hash-based signature (concatenated directly after expiry, no dash)
+- **SIG** (64 hex chars): SHA-256 signature, concatenated directly after the expiry with no dash
+
+**Signature input:** `{VERSION}{PLAN}|{RANDOM}|{YYYYMMDD}` — the version/plan block, the random ID and the expiry date are all covered, so changing any of them invalidates the signature.
+
+**Legacy format:** keys issued before the SHA-256 upgrade end with a 16-character signature. These are still accepted so that existing customers keep working, but new keys are always issued with SHA-256.
 
 ### How Validation Works
 
 The browser validates licenses without any server communication:
 
 1. **Decode** — Parse the license key structure
-2. **Verify version** — Check license version compatibility
-3. **Verify plan** — Validate plan type (PRO or COR)
-4. **Check expiry** — Ensure license has not expired
-5. **Verify signature** — Verify the key has not been casually modified
+2. **Verify plan** — Validate plan type (PRO or COR)
+3. **Verify format** — Check the expiry is a real calendar date (impossible dates such as `20271332` are rejected)
+4. **Check expiry** — Ensure the license has not expired
+5. **Verify signature** — Recompute the SHA-256 signature and compare it
 
 All validation happens 100% in your browser using JavaScript. No data is sent to any server.
+
+### Security Model
+
+CleanVault is intentionally a browser-only product with no backend. A determined user controls their own browser, so client-side licensing can ultimately be bypassed, and this is not claimed to prevent that.
+
+What the implementation does enforce:
+
+- A valid, signed, unexpired license key must be present. Setting a browser flag by hand grants nothing.
+- Expiry is genuinely enforced — a lapsed license stops granting Pro features.
+- Licenses cannot be altered accidentally or by casual inspection; the plan, expiry and random ID are all covered by the signature.
+
+### Personal vs Corporate
+
+Both plans are validated identically and currently unlock the same Pro feature set (Watermark, Page Numbers, Batch Processing). There are no application-level capability differences between them; the difference is in pricing and commercial terms.
 
 ---
 

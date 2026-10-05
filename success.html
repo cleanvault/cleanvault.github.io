@@ -349,26 +349,23 @@
             const SECRET_KEY = 'CleanVault-Pro-License-Secret-2024-Secure-Key';
 
             /**
-             * Generate signature (browser-compatible hash)
-             * Uses same algorithm as tools/generate-license.js
+             * Generate a SHA-256 signature using the browser Web Crypto API.
+             * Runs entirely offline - no network request.
+             * Same algorithm as tools/generate-license.js and js/license.js.
              */
-            function generateSignature(data) {
-                let hash = 0;
-                const str = SECRET_KEY + data;
-                for (let i = 0; i < str.length; i++) {
-                    const char = str.charCodeAt(i);
-                    hash = ((hash << 5) - hash) + char;
-                    hash = hash & hash; // Convert to 32bit integer
-                }
-                // Convert to hex and take first 16 chars
-                return Math.abs(hash).toString(16).toUpperCase().substring(0, 16).padEnd(16, '0');
+            async function generateSignature(data) {
+                const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(SECRET_KEY + data));
+                return Array.from(new Uint8Array(digest))
+                    .map(b => b.toString(16).padStart(2, '0'))
+                    .join('')
+                    .toUpperCase();
             }
 
             /**
              * Generate a unique license key
-             * Format: CV-PRO-XXXXX-XXXXXXXX-YYYYMMDDSSSSSSSSSSSSSSSS
+             * Format: CV-PRO-XXXXX-XXXXXXXX-YYYYMMDD<64-char SHA-256 hex>
              */
-            function generateLicenseKey(plan) {
+            async function generateLicenseKey(plan) {
                 // Calculate expiry date (1 year from now)
                 const now = new Date();
                 const expiry = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
@@ -389,7 +386,7 @@
 
                 // Create data to sign: versionPlan|random|expiry
                 const dataToSign = `${versionPlanBlock}|${randomPart}|${expiryStr}`;
-                const signature = generateSignature(dataToSign);
+                const signature = await generateSignature(dataToSign);
 
                 // Last part: expiry (8 digits) + signature (16 hex) = 24 chars, NO dash
                 return `CV-PRO-${versionPlanBlock}-${randomPart}-${expiryStr}${signature}`;
@@ -425,9 +422,9 @@
         }
 
         // Generate license on page load
-        function generateLicense() {
+        async function generateLicense() {
             const plan = getPlanFromURL();
-            const licenseKey = LicenseGenerator.generateLicenseKey(plan);
+            const licenseKey = await LicenseGenerator.generateLicenseKey(plan);
             
             // Calculate expiry date
             const now = new Date();

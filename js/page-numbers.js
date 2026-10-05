@@ -44,6 +44,12 @@ function initializePageNumbersTool() {
     const pageNumbersBtn = document.getElementById('pagenumbers-btn');
     const clearBtn = document.getElementById('clear-pagenumbers-btn');
 
+    // Check Pro status (same gate placement as the other Pro tools)
+    if (typeof LicenseManager !== 'undefined' && !LicenseManager.isActivated()) {
+        showStatus('error', '⚠️ This is a Pro feature. Please upgrade to CleanVault Pro to unlock page numbers and all Pro features.');
+        return;
+    }
+
     setupUploadArea('pagenumbers-upload-area', 'pagenumbers-file-input', (file) => handlePageNumbersFile(file));
     pageNumbersBtn.addEventListener('click', async () => await performPageNumbers());
     clearBtn.addEventListener('click', () => {

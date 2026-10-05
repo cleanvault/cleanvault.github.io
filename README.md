@@ -107,23 +107,28 @@ Unlock additional features with a CleanVault Pro license.
 
 If you don't see your license key after purchase, check your email for the license key, then follow steps 3-6 above.
 
-> **Note:** Pro activation is stored in your browser's localStorage. Clearing your browser data will deactivate your license — keep your license key safe. License must be renewed annually to maintain Pro access.
+> **Note:** Pro activation is stored in your browser's localStorage. Clearing your browser data will deactivate your license — keep your license key safe. Licences are annual and must be renewed to maintain Pro access; an expired licence stops granting Pro features.
 
 #### How the License System Works
 
-CleanVault uses a **self-contained, hash-signed license key system** that works entirely offline:
+CleanVault uses a **self-contained, SHA-256-signed license key system** that works entirely offline:
 
 - **No backend required** — License validation happens 100% in your browser
 - **No database lookup** — All license information is embedded in the license key itself
-- **No API calls** — Works completely offline after initial page load
-- **Hash-signed** — Each license key contains a signature that provides deterrence against casual tampering (not cryptographically secure)
+- **No API calls** — Works completely offline, including after the app has been cached
+- **SHA-256 signed** — Each key carries a SHA-256 signature covering the version/plan, random ID and expiry. Altering any of those invalidates it.
 
-Each license key securely contains:
+**Honest security note:** CleanVault is deliberately a browser-only product with no server. A determined user controls their own browser, so client-side licensing can ultimately be bypassed; this is not presented as protection against such a user. What it does enforce is that a valid, signed, unexpired license is required — manually setting a browser flag grants nothing, and a lapsed license stops working on its own.
+
+**Expiry is enforced.** A license past its expiry date no longer grants Pro access, so an annual licence genuinely needs renewing.
+
+**Personal and Corporate** licences are both recorded and validated identically, and both currently unlock the same Pro feature set (Watermark, Page Numbers, Batch Processing). They differ in price and in the commercial terms that come with them, not in application capabilities.
+
+Each license key contains:
 - Plan type (Personal Pro or Corporate)
 - Expiration date
 - License version
 - Unique random ID
-- Optional customer email (used for signature verification)
 
 The browser validates licenses by:
 1. Decoding the license key structure
