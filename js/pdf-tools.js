@@ -20,6 +20,77 @@ function ensurePDFLib() {
 }
 
 /**
+ * Mark an error as one the user caused and can act on, so tool modules can
+ * surface the real reason instead of a generic failure message.
+ * @param {string} message
+ * @returns {Error}
+ */
+function userFacingError(message) {
+    const err = new Error(message);
+    err.isUserFacing = true;
+    return err;
+}
+
+/**
+ * Validate a 1-based page number and convert it to a 0-based index.
+ *
+ * Accepts real integers and strings that are exactly an integer (e.g. "2"),
+ * so existing callers keep working. Rejects NaN, +/-Infinity, fractional
+ * values and partially-numeric text - values that parseInt() would silently
+ * reinterpret (e.g. "2abc" -> 2, 3.9 -> 3) or let through as NaN.
+ *
+ * @param {number|string} value - 1-based page number
+ * @param {number} totalPages
+ * @returns {number} zero-based page index
+ */
+function toPageIndex(value, totalPages) {
+    let num;
+
+    if (typeof value === 'number') {
+        num = value;
+    } else if (typeof value === 'string' && /^\d+$/.test(value.trim())) {
+        num = parseInt(value.trim(), 10);
+    } else {
+        throw userFacingError('Invalid page number: ' + String(value));
+    }
+
+    if (!Number.isInteger(num)) {
+        throw userFacingError('Invalid page number: ' + String(value));
+    }
+
+    const index = num - 1;
+    if (index < 0 || index >= totalPages) {
+        throw userFacingError('Page ' + num + ' is out of bounds. PDF has ' + totalPages + ' pages.');
+    }
+    return index;
+}
+
+/**
+ * Parse a single split range such as "3" or "1-5" into a [start, end] pair of
+ * 1-based page numbers. Strict by design: only digits, optionally joined by a
+ * single hyphen, are accepted, so "3.9", "1abc" and "1-2-3" are rejected
+ * rather than silently reinterpreted.
+ *
+ * @param {string} range
+ * @returns {Array<number>} [startPage, endPage] (1-based, start <= end)
+ */
+function parsePageRange(range) {
+    const text = String(range).trim();
+
+    if (/^\d+$/.test(text)) {
+        const page = parseInt(text, 10);
+        return [page, page];
+    }
+
+    const match = /^(\d+)\s*-\s*(\d+)$/.exec(text);
+    if (match) {
+        return [parseInt(match[1], 10), parseInt(match[2], 10)];
+    }
+
+    throw userFacingError('Invalid page range: ' + text);
+}
+
+/**
  * Merge multiple PDF files into a single PDF
  * @param {Array<File>} pdfFiles - Array of PDF File objects
  * @returns {Promise<Uint8Array>} - Merged PDF as Uint8Array
@@ -56,6 +127,7 @@ async function mergePDFs(pdfFiles) {
         
     } catch (error) {
         console.error('Error merging PDFs:', error);
+        if (error && error.isUserFacing) throw error;
         throw new Error('Failed to merge PDFs. Please ensure all files are valid PDFs.');
     }
 }
@@ -86,7 +158,13 @@ async function splitPDF(pdfFile, pageRanges) {
         // Handle "every N pages" mode (pageRanges is a number)
         if (typeof pageRanges === 'number') {
             const n = pageRanges;
-            if (n < 1) throw new Error('Split size must be at least 1 page.');
+            // Must be a whole number of at least 1. Testing `n < 1` alone would
+            // also let NaN and Infinity through, since every comparison
+            // against NaN is false.
+            if (!Number.isInteger(n)) {
+                throw userFacingError('Split size must be a whole number of pages.');
+            }
+            if (n < 1) throw userFacingError('Split size must be at least 1 page.');
             
             let partNum = 0;
             for (let start = 0; start < totalPages; start += n) {
@@ -148,29 +226,21 @@ async function splitPDF(pdfFile, pageRanges) {
             const range = expandedRanges[i];
             if (!range) continue;
             
-            // Parse the range (e.g., "1-5" or "3")
-            let startPage, endPage;
-            
-            if (range.includes('-')) {
-                const parts = range.split('-');
-                startPage = parseInt(parts[0]) - 1; // Convert to 0-based index
-                endPage = parseInt(parts[1]) - 1;
-            } else {
-                startPage = parseInt(range) - 1;
-                endPage = parseInt(range) - 1;
-            }
-            
+            // Parse the range (e.g., "1-5" or "3"). Strict parsing: only
+            // digits and at most one hyphen are accepted, so malformed input
+            // is reported instead of silently reinterpreted by parseInt()
+            // ("1-2-3" used to quietly become pages 1-2).
+            const [startPageNum, endPageNum] = parsePageRange(range);
+            const startPage = startPageNum - 1; // Convert to 0-based index
+            const endPage = endPageNum - 1;
+
             // Validate page numbers
-            if (isNaN(startPage) || isNaN(endPage)) {
-                throw new Error(`Invalid page range: ${range}`);
-            }
-            
             if (startPage < 0 || endPage >= totalPages) {
-                throw new Error(`Page range ${range} is out of bounds. PDF has ${totalPages} pages.`);
+                throw userFacingError(`Page range ${range} is out of bounds. PDF has ${totalPages} pages.`);
             }
             
             if (startPage > endPage) {
-                throw new Error(`Invalid range: start page (${startPage + 1}) is greater than end page (${endPage + 1})`);
+                throw userFacingError(`Invalid range: start page (${startPage + 1}) is greater than end page (${endPage + 1})`);
             }
             
             // Create a new PDF for this range
@@ -235,14 +305,12 @@ async function extractPages(pdfFile, pageNumbers) {
             throw new Error('Please specify at least one page number');
         }
         
-        // Convert to 0-based indices and validate
-        const pageIndices = pageNumbers.map(num => {
-            const index = num - 1; // Convert to 0-based
-            if (index < 0 || index >= totalPages) {
-                throw new Error(`Page ${num} is out of bounds. PDF has ${totalPages} pages.`);
-            }
-            return index;
-        });
+        // Convert to 0-based indices and validate.
+        // Strict validation matters here: a non-integer value would produce a
+        // NaN/fractional index that the range check below cannot catch (all
+        // comparisons against NaN are false) and that then fails silently or
+        // crashes inside pdf-lib.
+        const pageIndices = pageNumbers.map(num => toPageIndex(num, totalPages));
         
         // Create a new PDF
         const newPdf = await PDFLib.PDFDocument.create();
@@ -365,13 +433,7 @@ async function removePDFPages(pdfFile, pagesToRemove) {
         }
         
         // Convert to 0-based indices and validate
-        const removeIndices = pagesToRemove.map(num => {
-            const index = num - 1;
-            if (index < 0 || index >= totalPages) {
-                throw new Error(`Page ${num} is out of bounds. PDF has ${totalPages} pages.`);
-            }
-            return index;
-        });
+        const removeIndices = pagesToRemove.map(num => toPageIndex(num, totalPages));
         
         // Get all page indices
         const allIndices = Array.from({ length: totalPages }, (_, i) => i);
@@ -488,6 +550,7 @@ async function addPageNumbers(pdfFile, options = {}) {
         
     } catch (error) {
         console.error('Error adding page numbers:', error);
+        if (error && error.isUserFacing) throw error;
         throw new Error('Failed to add page numbers. Please ensure it is a valid PDF.');
     }
 }
@@ -522,18 +585,18 @@ async function watermarkPDF(pdfFile, options) {
         
         // Validate options
         if (!text || text.trim() === '') {
-            throw new Error('Watermark text is required');
+            throw userFacingError('Watermark text is required');
         }
         
         // Number.isFinite rejects NaN and Infinity. Without it, a comparison
         // against NaN is always false, so a blank numeric input would slip
         // past these range checks and fail deep inside pdf-lib instead.
         if (!Number.isFinite(fontSize) || fontSize < 8 || fontSize > 200) {
-            throw new Error('Font size must be a number between 8 and 200');
+            throw userFacingError('Font size must be a number between 8 and 200');
         }
         
         if (!Number.isFinite(opacity) || opacity < 0 || opacity > 1) {
-            throw new Error('Opacity must be a number between 0 and 1');
+            throw userFacingError('Opacity must be a number between 0 and 1');
         }
         
         // Embed a standard font (Helvetica)
@@ -604,6 +667,7 @@ async function watermarkPDF(pdfFile, options) {
         
     } catch (error) {
         console.error('Error adding watermark:', error);
+        if (error && error.isUserFacing) throw error;
         throw new Error('Failed to add watermark. Please ensure it is a valid PDF.');
     }
 }
@@ -628,14 +692,10 @@ async function reorderPDF(pdfFile, newOrder) {
             throw new Error('Please specify page order');
         }
         
-        // Convert to 0-based indices and validate
-        const pageIndices = newOrder.map(num => {
-            const index = num - 1; // Convert to 0-based
-            if (index < 0 || index >= totalPages) {
-                throw new Error(`Page ${num} is out of bounds. PDF has ${totalPages} pages.`);
-            }
-            return index;
-        });
+        // Convert to 0-based indices and validate. Ordering and duplicates are
+        // intentional and left to the caller; only each page number itself is
+        // validated.
+        const pageIndices = newOrder.map(num => toPageIndex(num, totalPages));
         
         // Create new PDF with pages in specified order
         const newPdf = await PDFLib.PDFDocument.create();
@@ -656,6 +716,7 @@ async function reorderPDF(pdfFile, newOrder) {
         
     } catch (error) {
         console.error('Error reordering PDF:', error);
+        if (error && error.isUserFacing) throw error;
         throw new Error('Failed to reorder PDF. Please ensure it is a valid PDF.');
     }
 }
@@ -705,6 +766,7 @@ async function removeMetadataPDF(pdfFile) {
         
     } catch (error) {
         console.error('Error removing metadata from PDF:', error);
+        if (error && error.isUserFacing) throw error;
         throw new Error('Failed to remove metadata from PDF. Please ensure it is a valid PDF.');
     }
 }
