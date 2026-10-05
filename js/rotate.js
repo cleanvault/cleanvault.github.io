@@ -2,6 +2,11 @@
  * CleanVault - Rotate PDF Tool Module
  */
 
+// True while a Rotate PDF operation is running. Guards against a second
+// concurrent invocation performing the work (and spending an operation) a
+// second time. Cleared in performRotate()'s outer finally.
+let rotateInFlight = false;
+
 function getRotateToolHTML() {
     return `
         <div class="tool-header">
@@ -86,27 +91,74 @@ async function handleRotateFile(file) {
 }
 
 async function performRotate() {
-    if (!currentFiles[0]) { showStatus('error', 'Please select a PDF file first'); return; }
-    const selectedRotation = parseInt(document.querySelector('input[name="rotation"]:checked').value);
+    // Re-entrancy guard. The button is disabled while loading, but that only
+    // protects genuine UI clicks - direct or programmatic concurrent calls
+    // would otherwise run twice, producing two downloads and consuming two of
+    // the user's daily operations.
+    if (rotateInFlight) return;
+    rotateInFlight = true;
 
-    const rotateBtn = document.getElementById('rotate-btn');
     try {
-        setLoading(rotateBtn, 'Rotating...');
-        showStatus('info', 'Rotating PDF... This may take a moment.');
-        const result = await PDFTools.rotatePDF(currentFiles[0], selectedRotation);
-        LimitsManager.trackOperation();
-        PDFTools.downloadFile(result.data, result.name);
-        showStatus('success', 'PDF rotated successfully! Downloading...');
-        setTimeout(() => {
-            currentFiles = [];
-            document.getElementById('rotate-page-info').style.display = 'none';
-            document.getElementById('rotate-options-group').style.display = 'none';
-            document.getElementById('rotate-actions').style.display = 'none';
-            document.getElementById('rotate-file-input').value = '';
-        }, 2000);
-    } catch (error) {
-        showStatus('error', error.message);
+        if (!currentFiles[0]) { showStatus('error', 'Please select a PDF file first'); return; }
+
+        // Re-check the daily allowance at execution time. The limit is shared
+        // across every tool and stored in localStorage, so it may have been
+        // reached after this file was selected - for example by an operation
+        // performed in a second tab.
+        const limitCheck = LimitsManager.canUseTool('rotate');
+        if (!limitCheck.allowed) {
+            showStatus('error', limitCheck.reason);
+            return;
+        }
+
+        // Re-check the page limit at execution time as defence in depth, using
+        // the page count read from the file we are about to process rather
+        // than the value cached at selection time.
+        const currentFile = currentFiles[0];
+        let info;
+        try {
+            info = await PDFTools.getPDFInfo(currentFile);
+        } catch (error) {
+            showStatus('error', error.message);
+            return;
+        }
+        const pageCheck = LimitsManager.canProcessFile(currentFile, info.pageCount);
+        if (!pageCheck.allowed) {
+            showStatus('error', pageCheck.reason);
+            return;
+        }
+
+        // Scoped to this tool's options group so foreign markup with the same
+        // radio name can never supply the angle. rotatePDF() itself rejects
+        // anything but 90/180/270, so a missing selection surfaces as a safe
+        // validation error rather than an exception.
+        const checked = document.querySelector('#rotate-options-group input[name="rotation"]:checked');
+        const selectedRotation = checked ? parseInt(checked.value, 10) : NaN;
+
+        const rotateBtn = document.getElementById('rotate-btn');
+        try {
+            setLoading(rotateBtn, 'Rotating...');
+            showStatus('info', 'Rotating PDF... This may take a moment.');
+            const result = await PDFTools.rotatePDF(currentFile, selectedRotation);
+            PDFTools.downloadFile(result.data, result.name);
+            // Count the operation only once the resulting PDF has actually been
+            // handed over. A failed transformation or a failed download then
+            // costs the user nothing.
+            LimitsManager.trackOperation();
+            showStatus('success', 'PDF rotated successfully! Downloading...');
+            setTimeout(() => {
+                currentFiles = [];
+                document.getElementById('rotate-page-info').style.display = 'none';
+                document.getElementById('rotate-options-group').style.display = 'none';
+                document.getElementById('rotate-actions').style.display = 'none';
+                document.getElementById('rotate-file-input').value = '';
+            }, 2000);
+        } catch (error) {
+            showStatus('error', error.message);
+        } finally {
+            unsetLoading(rotateBtn, 'Rotate PDF');
+        }
     } finally {
-        unsetLoading(rotateBtn, 'Rotate PDF');
+        rotateInFlight = false;
     }
 }

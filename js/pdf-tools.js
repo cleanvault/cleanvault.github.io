@@ -430,41 +430,56 @@ async function extractPages(pdfFile, pageNumbers) {
  */
 async function rotatePDF(pdfFile, degrees) {
     const PDFLib = ensurePDFLib();
-    
+
+    // Validate the rotation angle BEFORE the expensive file read and parse,
+    // so a tampered/forged angle fails fast without paying for PDF loading.
+    const validAngles = [90, 180, 270];
+    if (!validAngles.includes(degrees)) {
+        throw userFacingError('Invalid rotation angle. Must be 90, 180, or 270 degrees.');
+    }
+
+    if (!pdfFile || typeof pdfFile.arrayBuffer !== 'function') {
+        throw userFacingError('Invalid PDF file. Please select a valid PDF file.');
+    }
+
     try {
         // Read the PDF file
         const arrayBuffer = await pdfFile.arrayBuffer();
         const pdf = await PDFLib.PDFDocument.load(arrayBuffer);
-        
-        // Validate rotation angle
-        const validAngles = [90, 180, 270];
-        if (!validAngles.includes(degrees)) {
-            throw new Error('Invalid rotation angle. Must be 90, 180, or 270 degrees.');
-        }
-        
-        // Rotate each page
+
+        // Rotate each page in place, within the loaded document. Mutating the
+        // existing pages (rather than copying them into a brand new document)
+        // keeps everything that lives in the catalog rather than on the page -
+        // AcroForm fields, outlines, embedded files, named destinations, XMP
+        // metadata and page-level annotations - intact.
         const pages = pdf.getPages();
         pages.forEach((page) => {
             const currentRotation = page.getRotation().angle;
-            const newRotation = (currentRotation + degrees) % 360;
+            // Real-world PDFs occasionally carry a non-standard /Rotate value
+            // (e.g. 45). pdf-lib's setRotation() rejects non-multiples of 90,
+            // so normalise to the nearest quarter turn first; a conforming
+            // file is unaffected (nearest-90 of 0/90/180/270 is itself).
+            const normalised = ((Math.round(currentRotation / 90) * 90) % 360 + 360) % 360;
+            const newRotation = (normalised + degrees) % 360;
             page.setRotation({ type: 'degrees', angle: newRotation });
         });
-        
+
         // Save the rotated PDF
         const rotatedPdfBytes = await pdf.save();
-        
+
         // Create filename
         const baseName = pdfFile.name.replace('.pdf', '');
         const fileName = `${baseName}-rotated.pdf`;
-        
+
         return {
             name: fileName,
             data: rotatedPdfBytes
         };
-        
+
     } catch (error) {
         console.error('Error rotating PDF:', error);
-        throw error;
+        if (error && error.isUserFacing) throw error;
+        throw new Error('Failed to rotate PDF. Please ensure it is a valid PDF.');
     }
 }
 
