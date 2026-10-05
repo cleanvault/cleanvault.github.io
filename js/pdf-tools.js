@@ -91,6 +91,89 @@ function parsePageRange(range) {
 }
 
 /**
+ * Strip identifying document metadata from an already-loaded PDFDocument.
+ *
+ * Clears the standard Info dictionary text fields, deletes the CreationDate and
+ * ModDate keys outright (rather than replacing them with a neutral value, which
+ * would still be a date), and removes the XMP metadata object entirely.
+ *
+ * pdf-lib rewrites /Producer and /ModDate during PDFDocument.load(), so dates
+ * are removed after loading. Note that deleting only the Catalog's /Metadata
+ * key is not enough: pdf-lib serialises every registered object, so the XMP
+ * packet itself would survive as an orphan and stay recoverable.
+ *
+ * Two object-graph traps this deliberately avoids:
+ *   - PDFContext.indirectObjects is keyed by PDFRef *identity*, so a
+ *     reconstructed PDFRef.of("7 0 R") never matches and silently deletes
+ *     nothing. The real ref instances come from enumerateIndirectObjects().
+ *   - The Catalog's /Metadata entry is an entry *in the Catalog* pointing at
+ *     the XMP object. Deleting the Catalog's own ref would corrupt the
+ *     document, so the target ref is resolved and deleted instead.
+ *
+ * Only the Catalog's /Metadata key and /Type /Metadata objects are removed;
+ * this is not a general garbage collector and touches nothing else.
+ *
+ * @param {Object} pdf - a loaded PDFLib.PDFDocument
+ * @returns {void}
+ */
+function stripDocumentMetadata(pdf) {
+    const PDFLib = ensurePDFLib();
+
+    // Standard Info dictionary text fields.
+    pdf.setTitle('');
+    pdf.setAuthor('');
+    pdf.setSubject('');
+    pdf.setKeywords([]);
+    pdf.setCreator('');
+    pdf.setProducer('');
+
+    // Dates: delete the keys rather than writing a substitute value.
+    const info = pdf.context.lookup(pdf.context.trailerInfo.Info);
+    if (info && typeof info.delete === 'function') {
+        info.delete(PDFLib.PDFName.of('CreationDate'));
+        info.delete(PDFLib.PDFName.of('ModDate'));
+    }
+
+    // Map object numbers to the real PDFRef instances held by the context.
+    const realRefs = new Map();
+    for (const pair of pdf.context.enumerateIndirectObjects()) {
+        realRefs.set(pair[0].objectNumber + ' ' + pair[0].generationNumber, pair[0]);
+    }
+
+    // Collect the XMP objects to delete: whatever the Catalog points at, plus
+    // any /Type /Metadata object (covers orphans and object-stream members).
+    const targets = new Set();
+    const isRef = (value) => value && typeof value === 'object' &&
+        value.objectNumber !== undefined && value.generationNumber !== undefined;
+    const realRefFor = (value) => realRefs.get(value.objectNumber + ' ' + value.generationNumber);
+
+    const catalogMetadata = pdf.catalog.get(PDFLib.PDFName.of('Metadata'));
+    if (isRef(catalogMetadata)) {
+        const target = realRefFor(catalogMetadata);
+        if (target) targets.add(target);
+    }
+
+    for (const pair of pdf.context.enumerateIndirectObjects()) {
+        const object = pair[1];
+        let type = null;
+        try {
+            type = object && object.dict && typeof object.dict.get === 'function'
+                ? object.dict.get(PDFLib.PDFName.of('Type'))
+                : null;
+        } catch (error) {
+            type = null;
+        }
+        if (type && type.toString() === '/Metadata') targets.add(pair[0]);
+    }
+
+    // Remove the Catalog reference first, then the objects themselves.
+    pdf.catalog.delete(PDFLib.PDFName.of('Metadata'));
+    for (const ref of targets) {
+        pdf.context.delete(ref);
+    }
+}
+
+/**
  * Merge multiple PDF files into a single PDF
  * @param {Array<File>} pdfFiles - Array of PDF File objects
  * @returns {Promise<Uint8Array>} - Merged PDF as Uint8Array
@@ -737,13 +820,9 @@ async function removeMetadataPDF(pdfFile) {
         // Load the PDF
         const pdf = await PDFLib.PDFDocument.load(arrayBuffer);
         
-        // Remove metadata
-        pdf.setTitle('');
-        pdf.setAuthor('');
-        pdf.setSubject('');
-        pdf.setKeywords([]);
-        pdf.setCreator('');
-        pdf.setProducer('');
+        // Remove all identifying document metadata: Info dictionary fields,
+        // CreationDate/ModDate and the XMP metadata object itself.
+        stripDocumentMetadata(pdf);
         
         // Save the PDF
         const newPdfBytes = await pdf.save({

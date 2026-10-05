@@ -11,7 +11,7 @@ function getRemoveMetadataToolHTML() {
     return `
         <div class="tool-header">
             <h2>Remove Metadata</h2>
-            <p>Remove metadata (title, author, keywords, etc.) from your PDF.</p>
+            <p>Remove document properties and XMP metadata from your PDF.</p>
         </div>
         <div class="upload-area" id="remove-metadata-upload-area">
             <div class="upload-icon">
@@ -129,7 +129,7 @@ async function performRemoveMetadata() {
             // handed over. A failed transformation or a failed download then
             // costs the user nothing.
             LimitsManager.trackOperation();
-            showStatus('success', `Metadata removed successfully! Downloading...`);
+            showStatus('success', `Document properties and XMP metadata removed. Downloading...`);
             setTimeout(() => {
                 currentFiles = [];
                 document.getElementById('remove-metadata-info').style.display = 'none';

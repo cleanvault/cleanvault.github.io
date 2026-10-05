@@ -19,7 +19,7 @@ CleanVault is a privacy-first PDF tool website. Merge, split, extract, and rotat
 | **PDF Split** | Split a PDF into multiple files by page ranges (e.g., `1-5`, `10-20`). |
 | **Extract Pages** | Extract specific pages from a PDF (e.g., `2,5,8,10`). |
 | **Rotate PDF** | Rotate pages 90°, 180°, or 270° clockwise. |
-| **Remove Metadata** | Remove metadata (title, author, keywords, etc.) from your PDF. |
+| **Remove Metadata** | Remove document properties and XMP metadata from your PDF. |
 | **Reorder Pages** | Drag and drop to rearrange pages in your PDF. |
 | **Remove Pages** | Delete specific pages from any PDF. |
 

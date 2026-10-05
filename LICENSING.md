@@ -14,7 +14,7 @@ The free version includes all core PDF tools with the following limits:
 - **PDF Split** — Split by page ranges or every N pages
 - **Extract Pages** — Extract specific pages
 - **Rotate PDF** — Rotate pages 90°, 180°, or 270°
-- **Remove Metadata** — Remove metadata (title, author, keywords, etc.)
+- **Remove Metadata** — Remove document properties and XMP metadata from your PDF.
 - **Reorder Pages** — Drag and drop to rearrange pages
 - **Remove Pages** — Delete specific pages
 
