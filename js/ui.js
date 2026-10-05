@@ -162,10 +162,33 @@ function initializeDragAndDrop() {
 function updateFilesOrder() {
     const fileItems = document.querySelectorAll('.file-item');
     const newOrder = [];
+
+    // Every DOM item must map to a distinct, in-range entry in currentFiles, and
+    // the counts must match. If the DOM and the state array have drifted apart
+    // (for example the list was re-rendered mid-drag), rebuilding from the
+    // indices would silently drop files whose index no longer resolves, or
+    // duplicate one file if two items shared an index. In that case leave the
+    // array untouched and let the next render rebuild the correct order.
+    if (fileItems.length !== currentFiles.length) {
+        return;
+    }
+
+    const seen = new Set();
+    for (let i = 0; i < fileItems.length; i++) {
+        const index = parseInt(fileItems[i].getAttribute('data-index'), 10);
+        if (!Number.isInteger(index) || index < 0 || index >= currentFiles.length || seen.has(index)) {
+            return;
+        }
+        seen.add(index);
+    }
+    if (seen.size !== currentFiles.length) {
+        return;
+    }
+
     fileItems.forEach(item => {
-        const index = parseInt(item.getAttribute('data-index'));
-        if (currentFiles[index]) newOrder.push(currentFiles[index]);
+        newOrder.push(currentFiles[parseInt(item.getAttribute('data-index'), 10)]);
     });
+
     currentFiles = newOrder;
     fileItems.forEach((item, newIndex) => item.setAttribute('data-index', newIndex));
 }

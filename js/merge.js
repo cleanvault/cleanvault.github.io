@@ -137,7 +137,7 @@ async function performMerge() {
         const mergedPdfBytes = await PDFTools.mergePDFs(currentFiles);
         LimitsManager.trackOperation();
         PDFTools.downloadFile(mergedPdfBytes, 'merged.pdf');
-        showStatus('success', 'PDFs merged successfully! Downloading...');
+        showStatus('success', 'PDFs merged successfully!');
         setTimeout(() => {
             currentFiles = [];
             updateMergeFileList();
