@@ -216,153 +216,289 @@ async function mergePDFs(pdfFiles) {
 }
 
 /**
+ * Delete indirect objects that are no longer reachable from the document's
+ * trailer roots, treating the given page refs as permanently excluded.
+ *
+ * pdf-lib's removePage() only unlinks a leaf from the page tree: the page
+ * object itself stays in the context and is serialised on save(), so an
+ * excluded page's content stream, images and annotations would otherwise
+ * survive inside the output file. That is unacceptable for a splitter, where
+ * every output must contain only its own pages - a user splitting off a
+ * confidential section must not ship the confidential bytes along with it.
+ *
+ * A mark-and-sweep from the trailer (Root, Info, Encrypt, ID) keeps every
+ * object a viewer can still reach - AcroForm fields, outlines, named
+ * destinations, embedded files, page labels, XMP metadata, document actions,
+ * page resources - and drops the unlinked pages plus anything referenced only
+ * by them. Shared resources (a font used by a surviving page, for example)
+ * stay because a kept page still reaches them.
+ *
+ * Excluded page refs are never marked, so outlines, named destinations or
+ * links that point at an excluded page end up with a dangling (but harmless)
+ * destination reference instead of dragging the whole removed page graph back
+ * into the output. Dangling destinations are legal in PDF; Remove Pages and
+ * Reorder already leave bookmarks pointing at pages that are no longer in the
+ * tree, so viewers handle this class of reference the same way.
+ *
+ * Note on pdf-lib internals: PDFDict.entries() yields JS Map-style
+ * [key, value] pairs, so this traversal walks values() - reading .value off
+ * an entries() pair is always undefined and would silently mark nothing,
+ * sweeping the document down to an empty shell.
+ *
+ * @param {Object} pdf - a loaded PDFLib.PDFDocument
+ * @param {Array<Object>} excludedPageRefs - PDFRefs of pages that must not survive
+ * @returns {void}
+ */
+function pruneUnreachableObjects(pdf, excludedPageRefs) {
+    const context = pdf.context;
+
+    const excluded = new Set();
+    for (const ref of excludedPageRefs) {
+        excluded.add(ref.objectNumber + ' ' + ref.generationNumber);
+    }
+
+    const marked = new Set();
+    const pending = [];
+
+    const markRef = (ref) => {
+        const key = ref.objectNumber + ' ' + ref.generationNumber;
+        if (excluded.has(key) || marked.has(key)) return;
+        marked.add(key);
+        pending.push(ref);
+    };
+
+    const markValue = (value) => {
+        // A PDFRef edge. Duck-typed the same way stripDocumentMetadata()
+        // identifies refs: PDFRef exposes numeric objectNumber/generationNumber.
+        if (value && typeof value === 'object' &&
+            typeof value.objectNumber === 'number' &&
+            typeof value.generationNumber === 'number') {
+            markRef(value);
+            return;
+        }
+        if (!value || typeof value !== 'object') return;
+        // PDFDict and its subclasses (catalog, page trees, page leaves,
+        // outlines, AcroForm, name trees, info dictionary, ...).
+        if (typeof value.values === 'function') {
+            const children = value.values();
+            for (let i = 0; i < children.length; i++) markValue(children[i]);
+            return;
+        }
+        // PDFArray
+        if (typeof value.asArray === 'function') {
+            const children = value.asArray();
+            for (let i = 0; i < children.length; i++) markValue(children[i]);
+            return;
+        }
+        // PDFStream: walk its dictionary; the stream bytes hold no object refs.
+        if (value.dict && typeof value.getContents === 'function') {
+            markValue(value.dict);
+        }
+    };
+
+    // Trailer roots: catalog, Info dictionary, encryption dict, file ID.
+    const trailer = context.trailerInfo || {};
+    for (const key of Object.keys(trailer)) {
+        markValue(trailer[key]);
+    }
+
+    while (pending.length > 0) {
+        const ref = pending.pop();
+        const obj = context.lookup(ref);
+        if (obj) markValue(obj);
+    }
+
+    // Sweep everything unmarked (this includes the excluded page refs).
+    for (const pair of context.enumerateIndirectObjects()) {
+        const key = pair[0].objectNumber + ' ' + pair[0].generationNumber;
+        if (!marked.has(key)) {
+            context.delete(pair[0]);
+        }
+    }
+}
+
+/**
  * Split a PDF into multiple PDFs based on page ranges
+ *
+ * Semantics:
+ * - Array input: each comma/line segment is one range and produces exactly
+ *   one output, in input order (duplicates, overlaps and adjacent ranges are
+ *   allowed and each occurrence becomes its own output file).
+ * - Number input: split into consecutive chunks of N pages; the final chunk
+ *   may be shorter. Never produces empty outputs.
+ * - 'all': one output per page (legacy mode kept for API compatibility).
+ *
+ * Each output is produced by loading a fresh copy of the source and removing
+ * every page outside the chunk, rather than by copying pages into a brand new
+ * document. A brand new document silently destroys everything that lives in
+ * the catalog rather than on the page - AcroForm fields and their values,
+ * outlines, named destinations, embedded files, page labels, XMP metadata and
+ * document actions - even though every page itself survives. After the
+ * removal, pruneUnreachableObjects() drops the excluded pages' objects so no
+ * output silently carries pages it does not show.
+ *
  * @param {File} pdfFile - The PDF file to split
  * @param {Array<string>|number} pageRanges - Array of page range strings, or number for "every N pages"
  * @returns {Promise<Array<{name: string, data: Uint8Array}>>} - Array of split PDFs
  */
 async function splitPDF(pdfFile, pageRanges) {
     const PDFLib = ensurePDFLib();
-    
+
+    // Validate the file handle before the expensive read and parse, so a
+    // missing/garbage input fails with an actionable message instead of a
+    // TypeError from pdfFile.arrayBuffer().
+    if (!pdfFile || typeof pdfFile.arrayBuffer !== 'function') {
+        throw userFacingError('Invalid PDF file. Please select a valid PDF file.');
+    }
+
+    const everyNMode = typeof pageRanges === 'number';
+    const allMode = pageRanges === 'all';
+    if (!everyNMode && !allMode && !Array.isArray(pageRanges)) {
+        throw userFacingError('Invalid split input. Please provide page ranges.');
+    }
+    if (everyNMode) {
+        // Must be a whole number of at least 1. Testing `n < 1` alone would
+        // also let NaN and Infinity through, since every comparison
+        // against NaN is false.
+        if (!Number.isInteger(pageRanges)) {
+            throw userFacingError('Split size must be a whole number of pages.');
+        }
+        if (pageRanges < 1) throw userFacingError('Split size must be at least 1 page.');
+    }
+
     try {
         // Read the PDF file
         const arrayBuffer = await pdfFile.arrayBuffer();
         const pdf = await PDFLib.PDFDocument.load(arrayBuffer);
-        
+
         // Get total pages
         const totalPages = pdf.getPageCount();
-        
-        if (totalPages === 0) {
-            throw new Error('PDF has no pages.');
-        }
-        
-        const splitResults = [];
-        
-        // Handle "every N pages" mode (pageRanges is a number)
-        if (typeof pageRanges === 'number') {
-            const n = pageRanges;
-            // Must be a whole number of at least 1. Testing `n < 1` alone would
-            // also let NaN and Infinity through, since every comparison
-            // against NaN is false.
-            if (!Number.isInteger(n)) {
-                throw userFacingError('Split size must be a whole number of pages.');
-            }
-            if (n < 1) throw userFacingError('Split size must be at least 1 page.');
-            
-            let partNum = 0;
-            for (let start = 0; start < totalPages; start += n) {
-                const end = Math.min(start + n, totalPages) - 1;
-                partNum++;
-                
-                const newPdf = await PDFLib.PDFDocument.create();
-                const pageIndices = [];
-                for (let p = start; p <= end; p++) {
-                    pageIndices.push(p);
-                }
-                const pages = await newPdf.copyPages(pdf, pageIndices);
-                pages.forEach((page) => newPdf.addPage(page));
-                
-                const newPdfBytes = await newPdf.save();
-                const baseName = pdfFile.name.replace('.pdf', '');
-                const fileName = `${baseName}-part-${partNum}.pdf`;
-                
-                splitResults.push({ name: fileName, data: newPdfBytes });
-            }
-            
-            if (splitResults.length === 0) {
-                throw new Error('No pages to split.');
-            }
-            return splitResults;
-        }
-        
-        // Handle "every page" mode (pageRanges is 'all')
-        if (pageRanges === 'all') {
-            for (let i = 0; i < totalPages; i++) {
-                const newPdf = await PDFLib.PDFDocument.create();
-                const pages = await newPdf.copyPages(pdf, [i]);
-                pages.forEach((page) => newPdf.addPage(page));
-                
-                const newPdfBytes = await newPdf.save();
-                const baseName = pdfFile.name.replace('.pdf', '');
-                const fileName = `${baseName}-page-${i + 1}.pdf`;
-                
-                splitResults.push({ name: fileName, data: newPdfBytes });
-            }
-            
-            if (splitResults.length === 0) {
-                throw new Error('No pages to split.');
-            }
-            return splitResults;
-        }
-        
-        // Handle custom ranges (array of strings)
-        // Support comma-separated ranges on a single line: "1-5, 10, 20-25"
-        const expandedRanges = [];
-        for (const line of pageRanges) {
-            const parts = line.split(',').map(s => s.trim()).filter(s => s);
-            for (const part of parts) {
-                expandedRanges.push(part);
-            }
-        }
-        
-        for (let i = 0; i < expandedRanges.length; i++) {
-            const range = expandedRanges[i];
-            if (!range) continue;
-            
-            // Parse the range (e.g., "1-5" or "3"). Strict parsing: only
-            // digits and at most one hyphen are accepted, so malformed input
-            // is reported instead of silently reinterpreted by parseInt()
-            // ("1-2-3" used to quietly become pages 1-2).
-            const [startPageNum, endPageNum] = parsePageRange(range);
-            const startPage = startPageNum - 1; // Convert to 0-based index
-            const endPage = endPageNum - 1;
 
-            // Validate page numbers
-            if (startPage < 0 || endPage >= totalPages) {
-                throw userFacingError(`Page range ${range} is out of bounds. PDF has ${totalPages} pages.`);
-            }
-            
-            if (startPage > endPage) {
-                throw userFacingError(`Invalid range: start page (${startPage + 1}) is greater than end page (${endPage + 1})`);
-            }
-            
-            // Create a new PDF for this range
-            const newPdf = await PDFLib.PDFDocument.create();
-            
-            // Copy pages in the range
-            const pageIndices = [];
-            for (let pageNum = startPage; pageNum <= endPage; pageNum++) {
-                pageIndices.push(pageNum);
-            }
-            
-            const pages = await newPdf.copyPages(pdf, pageIndices);
-            pages.forEach((page) => {
-                newPdf.addPage(page);
-            });
-            
-            // Save the new PDF
-            const newPdfBytes = await newPdf.save();
-            
-            // Create filename
-            const baseName = pdfFile.name.replace('.pdf', '');
-            const partNumber = i + 1;
-            const fileName = `${baseName}-part-${partNumber}.pdf`;
-            
-            splitResults.push({
-                name: fileName,
-                data: newPdfBytes
-            });
+        if (totalPages === 0) {
+            throw userFacingError('PDF has no pages.');
         }
-        
-        if (splitResults.length === 0) {
-            throw new Error('No valid page ranges provided');
+
+        // Plan every output up front (arrays of 0-based page indices), so all
+        // input validation completes before any output PDF is produced. A bad
+        // range at the end of the list can no longer leave a half-finished
+        // result set behind.
+        const chunks = [];
+
+        if (everyNMode) {
+            const n = pageRanges;
+            for (let start = 0; start < totalPages; start += n) {
+                const indices = [];
+                const end = Math.min(start + n, totalPages);
+                for (let p = start; p < end; p++) indices.push(p);
+                chunks.push(indices);
+            }
+        } else if (allMode) {
+            for (let i = 0; i < totalPages; i++) chunks.push([i]);
+        } else {
+            // Support comma-separated ranges on a single line: "1-5, 10, 20-25"
+            // and multiple lines. Blank lines carry no ranges and are skipped;
+            // an empty segment between commas ("1,,5", "1,") is malformed input
+            // and is reported instead of silently producing fewer outputs than
+            // the user asked for.
+            const expandedRanges = [];
+            for (const line of pageRanges) {
+                const parts = String(line).split(',');
+                if (parts.length === 1 && parts[0].trim() === '') continue;
+                for (const part of parts) {
+                    const text = part.trim();
+                    if (!text) {
+                        throw userFacingError('Invalid page range list: empty entry between commas.');
+                    }
+                    expandedRanges.push(text);
+                }
+            }
+
+            if (expandedRanges.length === 0) {
+                throw userFacingError('No valid page ranges provided');
+            }
+
+            for (const range of expandedRanges) {
+                // Parse the range (e.g., "1-5" or "3"). Strict parsing: only
+                // digits and at most one hyphen are accepted, so malformed input
+                // is reported instead of silently reinterpreted by parseInt()
+                // ("1-2-3" used to quietly become pages 1-2).
+                const [startPageNum, endPageNum] = parsePageRange(range);
+                const startPage = startPageNum - 1; // Convert to 0-based index
+                const endPage = endPageNum - 1;
+
+                if (startPage < 0 || endPage >= totalPages) {
+                    throw userFacingError(`Page range ${range} is out of bounds. PDF has ${totalPages} pages.`);
+                }
+
+                if (startPage > endPage) {
+                    throw userFacingError(`Invalid range: start page (${startPageNum}) is greater than end page (${endPageNum})`);
+                }
+
+                const indices = [];
+                for (let pageNum = startPage; pageNum <= endPage; pageNum++) {
+                    indices.push(pageNum);
+                }
+                chunks.push(indices);
+            }
         }
-        
+
+        if (chunks.length === 0) {
+            throw userFacingError('No pages to split.');
+        }
+
+        // Strip only a trailing extension (case-insensitive). Replacing the
+        // first ".pdf" anywhere in the name would corrupt names like
+        // "report.pdf.final.pdf".
+        const rawName = (typeof pdfFile.name === 'string' && pdfFile.name) ? pdfFile.name : 'document.pdf';
+        const baseName = rawName.replace(/\.pdf$/i, '') || 'document';
+
+        const splitResults = [];
+        let partNum = 0;
+
+        for (const keepIndices of chunks) {
+            partNum++;
+
+            // Fresh load per output: removals in one output must not affect
+            // the page set of the next.
+            const outputDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+            const keep = new Set(keepIndices);
+            const outputPages = outputDoc.getPages();
+
+            // Record the refs of the pages being excluded BEFORE unlinking
+            // them, so pruneUnreachableObjects() can delete them outright.
+            const excludedRefs = [];
+            for (let i = 0; i < outputPages.length; i++) {
+                if (!keep.has(i)) excludedRefs.push(outputPages[i].ref);
+            }
+
+            // Highest index first: removing a page shifts the indexes of every
+            // later page, so working downwards keeps the remaining targets valid.
+            for (let i = outputPages.length - 1; i >= 0; i--) {
+                if (!keep.has(i)) outputDoc.removePage(i);
+            }
+
+            if (excludedRefs.length > 0) {
+                pruneUnreachableObjects(outputDoc, excludedRefs);
+            }
+
+            const newPdfBytes = await outputDoc.save();
+
+            const fileName = allMode
+                ? `${baseName}-page-${keepIndices[0] + 1}.pdf`
+                : `${baseName}-part-${partNum}.pdf`;
+
+            splitResults.push({ name: fileName, data: newPdfBytes });
+        }
+
         return splitResults;
-        
     } catch (error) {
         console.error('Error splitting PDF:', error);
-        throw error;
+        // Actionable range/size/file errors are re-thrown unchanged; anything
+        // else (pdf-lib parse failures, corrupt structures, I/O problems) is
+        // replaced with a generic message so internal parser detail never
+        // reaches the UI.
+        if (error && error.isUserFacing) throw error;
+        throw new Error('Failed to split the PDF. Please ensure it is a valid PDF.');
     }
 }
 

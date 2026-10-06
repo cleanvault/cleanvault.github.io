@@ -16,7 +16,7 @@ CleanVault is a privacy-first PDF tool website. Merge, split, extract, and rotat
 | Tool | What It Does |
 |------|-------------|
 | **PDF Merge** | Combine multiple PDFs into one document. Drag to reorder files. |
-| **PDF Split** | Split a PDF into multiple files by page ranges (e.g., `1-5`, `10-20`). |
+| **PDF Split** | Split a PDF into multiple files by page ranges (e.g., `1-5`, `10-20`) or every N pages. One Split action counts as one operation. |
 | **Extract Pages** | Extract specific pages from a PDF (e.g., `2,5,8,10`). |
 | **Rotate PDF** | Rotate pages 90°, 180°, or 270° clockwise. |
 | **Remove Metadata** | Remove document properties and XMP metadata from your PDF. |
@@ -155,14 +155,29 @@ The browser validates licenses by:
 
 1. Click **Split PDF** on the homepage.
 2. Upload a PDF file.
-3. Enter page ranges (one per line):
+3. Choose a split mode:
+   - **Page Ranges** — enter page ranges (one per line, or comma-separated on one line):
    ```
    1-5
    10-20
    25
    ```
+   - **Every N Pages** — enter a positive whole number (e.g., `5` splits into consecutive 5-page files; the final file may be shorter).
 4. Click **Split PDF**.
-5. Multiple PDFs download automatically.
+5. Multiple PDFs download automatically (`...-part-1.pdf`, `...-part-2.pdf`, ...).
+
+Range rules (enforced before anything is produced):
+
+- Each comma/line entry becomes its own output, in the order given.
+- Duplicate, overlapping, and adjacent ranges are allowed — each occurrence is a separate output.
+- Reversed ranges (`5-1`), out-of-range pages, empty comma entries (`1,,5`), and malformed ranges are rejected with an error.
+- Whitespace around valid range syntax is accepted.
+
+Every-N rules: N must be a positive whole number (`2.5`, `0`, negatives, and non-numeric input are rejected). `N=1` produces one file per page; N larger than the page count produces a single file with all pages. The final partial chunk is kept — no empty PDFs are produced.
+
+Limits: one Split action counts as **one** operation no matter how many files it creates. Daily and page limits are checked both when the file is selected and again at execution time. If every download fails, nothing is counted and the file stays selected so the split can be retried.
+
+Privacy note: Split loads a fresh copy of the source for each output, keeps only that output's pages, and sweeps unreachable objects so excluded pages' content is not carried along inside the delivered files. Processing stays local in the browser (no uploads, no PDF network calls). This is content hygiene for the delivered files, not a claim of forensic erasure of every possible byte.
 
 ### Extract Pages
 
