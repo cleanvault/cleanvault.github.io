@@ -102,6 +102,7 @@ If you don't see your license key after purchase:
 - Activation is stored in your browser's localStorage
 - Clearing browser data will deactivate your license
 - Keep your license key safe for re-activation
+- Failed activation (invalid key, expired license, or an unexpected validation error) shows an error message in the Activate section and changes nothing — your current Free or Pro state is left untouched
 - One license works on unlimited devices (same user)
 - No account or login required
 - **No backend required** — All validation happens in your browser

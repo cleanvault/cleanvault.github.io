@@ -52,6 +52,12 @@ CleanVault is a privacy-first PDF tool website. Merge, split, extract, and rotat
 
 **That's it.** Your files never leave your computer.
 
+**Interface behavior:**
+
+- Only files with the PDF MIME type (`application/pdf`) are accepted — renaming a non-PDF file to `.pdf` does not bypass this check.
+- Status, success, and error messages are written as plain text, never as HTML, so they cannot execute scripts. A tool's messages appear in that tool's status area; if a specifically requested status element is missing, the message falls back to the global status element when one exists, then to the general status area — degrading gracefully instead of failing.
+- Action buttons can show a disabled state with a spinner while work runs. If an expected element (a button, a status area, the pricing section) is missing, the interface degrades safely — showing a fallback message or doing nothing — instead of crashing.
+
 ---
 
 ## 🔒 Privacy
@@ -299,9 +305,15 @@ Chrome, Edge, Firefox, and Safari (latest versions).
 
 There's no hard limit, but very large PDFs (100+ MB) may be slow depending on your device's memory.
 
+### Which files are accepted?
+
+CleanVault accepts only files whose browser-reported type is the PDF MIME type (`application/pdf`). A renamed file (for example, an executable renamed to `.pdf`) is still rejected, because validation checks the file's type, not its name.
+
 ### How does Pro activation work?
 
 Pro activation is stored in your browser's localStorage. When you enter a valid license key, the Pro features unlock. No account or login is required.
+
+If activation fails — an invalid key, an expired license, or an unexpected error during validation — an error message is shown in the Activate section and nothing changes; your current state (Free or Pro) is left untouched. A valid key succeeds as described above.
 
 ### What happens if I clear my browser data?
 

@@ -97,20 +97,20 @@ function initializeTool(toolName) {
  * @param {string} specificId - Optional tool-specific status element ID
  */
 function showStatus(type, message, specificId) {
-    // Try tool-specific status element first
+    // Fallback priority: requested element first, then the global status,
+    // then any visible tool status. The global element is preferred over a
+    // generic `.status` match so a stale status element left behind by a
+    // previously shown tool cannot capture messages intended for the current
+    // context (e.g. global notices issued after switching tools).
     let statusElement = null;
     if (specificId) {
         statusElement = document.getElementById(specificId);
     }
     if (!statusElement) {
-        // Try to find status element within current tool
-        const toolContent = document.getElementById('tool-content');
-        if (toolContent) {
-            statusElement = toolContent.querySelector('.status');
-        }
+        statusElement = document.getElementById('global-status');
     }
-    // Fallback to any .status element
     if (!statusElement) {
+        // Fallback to any .status element
         statusElement = document.querySelector('.status');
     }
     if (!statusElement) return;
@@ -255,6 +255,12 @@ function setupMultiUploadArea(uploadAreaId, fileInputId, onDrop) {
  * @returns {boolean}
  */
 function validatePDF(file) {
+    // Null-safe: every production caller guards with `if (!file || ...)` first,
+    // but the shared validator itself must reject missing/non-object input
+    // instead of throwing a TypeError reading `.type` of null/undefined.
+    if (!file || typeof file !== 'object') {
+        return false;
+    }
     if (file.type !== 'application/pdf') {
         showStatus('error', 'Please select a valid PDF file');
         return false;
@@ -283,6 +289,9 @@ function showPageInfo(prefix, file, pageCount) {
  * @param {string} loadingText
  */
 function setLoading(btn, loadingText) {
+    // Null-safe: tools call this inside try/finally paths where the button
+    // reference may be missing; a throw here would mask the real error.
+    if (!btn) return;
     btn.disabled = true;
     btn.innerHTML = `<span class="spinner"></span> ${loadingText}`;
 }
@@ -293,6 +302,8 @@ function setLoading(btn, loadingText) {
  * @param {string} originalText
  */
 function unsetLoading(btn, originalText) {
+    // Null-safe counterpart of setLoading (see above).
+    if (!btn) return;
     btn.disabled = false;
     btn.textContent = originalText;
 }
@@ -313,7 +324,17 @@ function initializeLicenseUI() {
                 showActivationStatus('Please enter a license key', 'error');
                 return;
             }
-            const result = await LicenseManager.activate(licenseKey);
+            // Contained: a throwing LicenseManager must surface as a normal
+            // failure message, never as an unhandled promise rejection with
+            // no user feedback.
+            let result;
+            try {
+                result = await LicenseManager.activate(licenseKey);
+            } catch (error) {
+                console.error('Error activating license:', error);
+                showActivationStatus('Failed to activate license. Please try again.', 'error');
+                return;
+            }
             if (result.success) {
                 showActivationStatus(result.message, 'success');
                 licenseInput.value = '';
@@ -373,8 +394,15 @@ function showActivationStatus(message, type) {
 // ============================================
 
 function showUpgradeModal() {
-    // Redirect to pricing section where Stripe links are located
-    document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' });
+    // Redirect to pricing section where Stripe links are located.
+    // Guarded: if the pricing section is absent, degrade to an informational
+    // status instead of throwing a TypeError on a null element.
+    const pricing = document.getElementById('pricing');
+    if (pricing && typeof pricing.scrollIntoView === 'function') {
+        pricing.scrollIntoView({ behavior: 'smooth' });
+        return;
+    }
+    showStatus('info', 'CleanVault Pro is available — see the pricing section to upgrade.', 'global-status');
 }
 
 // Make globally available for onclick handlers
