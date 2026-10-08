@@ -1,6 +1,11 @@
-/**
- * CleanVault - Extract Pages Tool Module
- */
+// Pending post-success cleanup timer. Cancelled before a new one is scheduled
+// and guarded by file identity so a delayed callback can never clear state
+// belonging to a later selection or another tool.
+// Re-entrancy guard so a concurrent run can never produce a second download
+// or charge a second operation.
+let extractInFlight = false;
+let extractCleanupTimer = null;
+
 
 function getExtractToolHTML() {
     return `
@@ -44,7 +49,7 @@ function initializeExtractTool() {
     setupUploadArea('extract-upload-area', 'extract-file-input', (file) => handleExtractFile(file));
     extractBtn.addEventListener('click', async () => await performExtract());
     clearBtn.addEventListener('click', () => {
-        currentFiles = [];
+        currentFile = null;
         document.getElementById('extract-page-info').style.display = 'none';
         document.getElementById('extract-pages-group').style.display = 'none';
         document.getElementById('extract-actions').style.display = 'none';
@@ -75,7 +80,9 @@ async function handleExtractFile(file) {
             return;
         }
         
-        currentFiles = [file];
+        // Scope to the current file so the operation always processes exactly
+        // the PDF the customer selected, never the first item in a shared list.
+        currentFile = file;
         showPageInfo('extract', file, info.pageCount);
         document.getElementById('extract-pages-group').style.display = 'block';
         document.getElementById('extract-actions').style.display = 'flex';
@@ -129,7 +136,7 @@ function parseExtractPageList(text) {
 }
 
 async function performExtract() {
-    if (!currentFiles[0]) { showStatus('error', 'Please select a PDF file first'); return; }
+    if (!currentFile) { showStatus('error', 'Please select a PDF file first'); return; }
 
     // Validate the whole input before processing so a typo can never be
     // silently corrected into the wrong set of pages.
@@ -141,25 +148,59 @@ async function performExtract() {
     }
     const pageNumbers = parsed.pages;
 
+    // Re-entrancy guard. The button is disabled while loading, but that only
+    // protects genuine UI clicks - direct or programmatic concurrent calls
+    // would otherwise run twice, producing two downloads and consuming two of
+    // the user's daily operations.
+    if (extractInFlight) return;
+    extractInFlight = true;
+
     const extractBtn = document.getElementById('extract-btn');
     try {
         setLoading(extractBtn, 'Extracting...');
         showStatus('info', 'Extracting pages... This may take a moment.');
-        const result = await PDFTools.extractPages(currentFiles[0], pageNumbers);
+
+        // Check the page limit at execution time. The limit is stored in
+        // localStorage and may have been reached after the file was selected
+        // (for example by an operation performed in a second tab).
+        const limitCheck = LimitsManager.canUseTool('extract');
+        if (!limitCheck.allowed) {
+            showStatus('error', limitCheck.reason);
+            return;
+        }
+
+        const pageCheck = LimitsManager.canProcessFile(currentFile, 0);
+        if (!pageCheck.allowed) {
+            showStatus('error', pageCheck.reason);
+            return;
+        }
+
+        const result = await PDFTools.extractPages(currentFile, pageNumbers);
+
+        // Count the operation only once the resulting PDF has actually been
+        // handed over. A failed transformation or a failed download then
+        // costs the user nothing.
         LimitsManager.trackOperation();
         PDFTools.downloadFile(result.data, result.name);
         showStatus('success', 'Pages extracted successfully!');
-        setTimeout(() => {
-            currentFiles = [];
+
+        // Schedule the post-success UI reset and cancel any previous pending
+        // reset so a stale callback can never clear state belonging to a new
+        // selection or another tool.
+        clearTimeout(extractCleanupTimer);
+        extractCleanupTimer = setTimeout(() => {
+            currentFile = null;
             document.getElementById('extract-page-info').style.display = 'none';
             document.getElementById('extract-pages-group').style.display = 'none';
             document.getElementById('extract-actions').style.display = 'none';
             document.getElementById('extract-pages').value = '';
             document.getElementById('extract-file-input').value = '';
+            extractInFlight = false;
         }, 2000);
     } catch (error) {
         showStatus('error', error.message);
     } finally {
         unsetLoading(extractBtn, 'Extract Pages');
+        extractInFlight = false;
     }
 }
