@@ -554,7 +554,13 @@ async function extractPages(pdfFile, pageNumbers) {
         
     } catch (error) {
         console.error('Error extracting pages:', error);
-        throw error;
+        // Preserve messages the tool already crafted for the user (page
+        // bounds, invalid page numbers, empty list, ...); wrap unexpected
+        // internal errors so a malformed file surfaces a friendly message
+        // instead of pdf-lib parse details (same pattern as rotatePDF /
+        // removePDFPages).
+        if (error && error.isUserFacing) throw error;
+        throw new Error('Failed to extract pages from the PDF. Please ensure it is a valid PDF.');
     }
 }
 

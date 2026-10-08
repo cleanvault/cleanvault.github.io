@@ -9,6 +9,17 @@
 let batchFiles = [];
 let batchOperation = 'rotate';
 
+// True while a batch run is in progress. Blocks re-entrant runs and makes the
+// mutating handlers ignore calls, so the state a run snapshotted cannot change
+// under it. Cleared in performBatch()'s finally.
+let batchInFlight = false;
+
+// Pending post-success cleanup timer. Cancelled before a new one is scheduled,
+// and the callback is guarded by batch identity, batchInFlight and null-safe
+// DOM lookups, so a delayed callback can never wipe a newer selection or throw
+// after the tool DOM is torn down (same pattern as watermarkCleanupTimer).
+let batchCleanupTimer = null;
+
 function getBatchToolHTML() {
     return `
         <div class="tool-header">
@@ -113,6 +124,11 @@ function initializeBatchTool() {
     if (staleActions) staleActions.style.display = 'none';
     if (fileInput) fileInput.value = '';
 
+    // A run that started before the tool was switched away keeps processing
+    // its snapshot; keep the freshly rendered controls locked to match. The
+    // run's finally unlocks them when it completes.
+    if (batchInFlight) setBatchControlsDisabled(true);
+
     // Check Pro status
     if (typeof LicenseManager !== 'undefined' && !LicenseManager.isActivated()) {
         showStatus('error', '⚠️ This is a Pro feature. Please upgrade to CleanVault Pro to unlock batch processing and all Pro features.');
@@ -131,10 +147,20 @@ function initializeBatchTool() {
     
     batchBtn.addEventListener('click', async () => await performBatch());
     clearBtn.addEventListener('click', () => {
+        // While a run is in flight the visible list belongs to that run (the
+        // button is disabled anyway); guard so a programmatic click cannot
+        // desynchronise it from the snapshot being processed.
+        if (batchInFlight) return;
         batchFiles = [];
         document.getElementById('batch-file-list').innerHTML = '';
         document.getElementById('batch-actions').style.display = 'none';
         fileInput.value = '';
+        // Reset the page-number inputs too, otherwise stale entries silently
+        // carry over into the next batch (same rationale as extract.js).
+        const removePagesInput = document.getElementById('batch-remove-pages');
+        if (removePagesInput) removePagesInput.value = '';
+        const extractPagesInput = document.getElementById('batch-extract-pages');
+        if (extractPagesInput) extractPagesInput.value = '';
     });
     
     // Initial options visibility
@@ -150,6 +176,13 @@ function updateBatchOptionsVisibility() {
 }
 
 function handleBatchFiles(files) {
+    // A run processes the snapshot taken when it started. Adding files during
+    // the run would desynchronise the visible list from what is being
+    // processed and would be wiped by the run's post-success cleanup, so
+    // ignore additions until it finishes (the upload controls are disabled
+    // meanwhile).
+    if (batchInFlight) return;
+
     const validFiles = Array.from(files).filter(file => {
         if (file.type !== 'application/pdf') {
             showStatus('error', `"${file.name}" is not a PDF file`);
@@ -201,7 +234,12 @@ function updateBatchFileList() {
 }
 
 function removeBatchFile(index) {
-    batchFiles.splice(index, 1);
+    if (batchInFlight) return;
+
+    // Reassign instead of splicing in place: the array identity is how the
+    // post-run cleanup timer recognises that its batch is still the current
+    // selection (any removal therefore makes it skip the wipe).
+    batchFiles = batchFiles.filter((file, i) => i !== index);
     updateBatchFileList();
     if (batchFiles.length === 0) {
         document.getElementById('batch-actions').style.display = 'none';
@@ -249,75 +287,176 @@ function parseBatchPageList(text) {
     return { ok: true, pages, error: '' };
 }
 
+/**
+ * Lock or unlock every control that can mutate batch state while a run is in
+ * progress. The run works from a snapshot, so this is a UI-level guarantee;
+ * the mutating handlers additionally guard on batchInFlight.
+ * @param {boolean} disabled
+ */
+function setBatchControlsDisabled(disabled) {
+    const ids = [
+        'batch-file-input', 'clear-batch-btn', 'batch-rotate-angle',
+        'batch-watermark-text', 'batch-watermark-size', 'batch-watermark-opacity',
+        'batch-watermark-position', 'batch-pagenumbers-position',
+        'batch-remove-pages', 'batch-extract-pages'
+    ];
+    ids.forEach(function (id) {
+        const el = document.getElementById(id);
+        if (el) el.disabled = disabled;
+    });
+    document.getElementsByName('batch-op').forEach(function (radio) {
+        radio.disabled = disabled;
+    });
+    document.querySelectorAll('.file-remove').forEach(function (btn) {
+        btn.disabled = disabled;
+    });
+    // The upload area is a <div>, so a disabled property would not stop a
+    // click or drop; pointer-events does. handleBatchFiles() additionally
+    // guards the drop path for programmatic calls.
+    const uploadArea = document.getElementById('batch-upload-area');
+    if (uploadArea) uploadArea.style.pointerEvents = disabled ? 'none' : '';
+}
+
 async function performBatch() {
-    if (batchFiles.length === 0) {
-        showStatus('error', 'Please select at least one PDF file');
-        return;
-    }
-    
-    // Validate page input up front, before any file is processed, so a typo
-    // cannot destroy a long-running batch part way through.
-    let batchPages = null;
-    if (batchOperation === 'remove' || batchOperation === 'extract') {
-        const isRemove = batchOperation === 'remove';
-        const input = document.getElementById(isRemove ? 'batch-remove-pages' : 'batch-extract-pages');
-        const parsed = parseBatchPageList(input ? input.value : '');
-        if (!parsed.ok) {
-            showStatus('error', parsed.error ||
-                (isRemove ? 'Please enter page numbers to remove' : 'Please enter page numbers to extract'));
+    // Re-entrancy guard: the Process button is disabled while a run is
+    // active, but that only blocks genuine clicks - a programmatic or
+    // double-triggered call would otherwise start a second concurrent run
+    // over the same state (mirrors page-numbers.js's in-flight guard).
+    if (batchInFlight) return;
+    batchInFlight = true;
+
+    const batchBtn = document.getElementById('batch-btn');
+
+    try {
+        if (batchFiles.length === 0) {
+            showStatus('error', 'Please select at least one PDF file');
             return;
         }
-        batchPages = parsed.pages;
-    }
-    
-    const batchBtn = document.getElementById('batch-btn');
-    
-    try {
+
+        // Re-check Pro status at execution time. The licence may have been
+        // deactivated or may have expired since the tool was opened.
+        if (typeof LicenseManager !== 'undefined' && !LicenseManager.isActivated()) {
+            showStatus('error', '⚠️ This is a Pro feature. Please upgrade to CleanVault Pro to unlock batch processing and all Pro features.');
+            return;
+        }
+
+        // Re-check the limits at execution time: the daily allowance may have
+        // been consumed since this tool was opened, and the batch gate must
+        // hold at the moment the work actually starts.
+        const limitCheck = LimitsManager.canUseTool('batch');
+        if (!limitCheck.allowed) {
+            showStatus('error', limitCheck.reason);
+            return;
+        }
+
+        // Snapshot the batch before any async work. The run processes ONLY
+        // these files, this operation and these option values: the controls
+        // that could change them are locked for the duration of the run and
+        // the mutating handlers ignore calls while a run is active, so
+        // clearing the list, adding files or switching operation/options
+        // mid-run - or reopening the tool - cannot redirect the work.
+        const filesToProcess = batchFiles.slice();
+        const operation = batchOperation;
+
+        // Validate the operation's inputs up front, before any file is
+        // processed, so a typo cannot destroy a long-running batch part way
+        // through - and, for watermark options, before any PDF is loaded, so
+        // a bad value costs no work and consumes no operation.
+        let batchPages = null;
+        let rotateAngle = null;
+        let pagenumbersPosition = null;
+        let watermarkOptions = null;
+
+        if (operation === 'remove' || operation === 'extract') {
+            const isRemove = operation === 'remove';
+            const input = document.getElementById(isRemove ? 'batch-remove-pages' : 'batch-extract-pages');
+            const parsed = parseBatchPageList(input ? input.value : '');
+            if (!parsed.ok) {
+                showStatus('error', parsed.error ||
+                    (isRemove ? 'Please enter page numbers to remove' : 'Please enter page numbers to extract'));
+                return;
+            }
+            batchPages = parsed.pages;
+        } else if (operation === 'rotate') {
+            const angleInput = document.getElementById('batch-rotate-angle');
+            if (!angleInput) {
+                showStatus('error', 'Batch options are missing. Please reload the page and try again.');
+                return;
+            }
+            rotateAngle = parseInt(angleInput.value, 10);
+        } else if (operation === 'pagenumbers') {
+            const positionInput = document.getElementById('batch-pagenumbers-position');
+            if (!positionInput) {
+                showStatus('error', 'Batch options are missing. Please reload the page and try again.');
+                return;
+            }
+            pagenumbersPosition = positionInput.value;
+        } else if (operation === 'watermark') {
+            // Same validation as the single-file Watermark tool, plus the
+            // range checks watermarkPDF applies - run here so an invalid
+            // value is rejected before the first PDF is even loaded.
+            const textInput = document.getElementById('batch-watermark-text');
+            const sizeInput = document.getElementById('batch-watermark-size');
+            const opacityInput = document.getElementById('batch-watermark-opacity');
+            const positionInput = document.getElementById('batch-watermark-position');
+            if (!textInput || !sizeInput || !opacityInput || !positionInput) {
+                showStatus('error', 'Watermark options are missing. Please reload the page and try again.');
+                return;
+            }
+            const text = textInput.value.trim();
+            if (!text) {
+                showStatus('error', 'Please enter watermark text');
+                return;
+            }
+            const fontSize = parseInt(sizeInput.value, 10);
+            if (!Number.isFinite(fontSize) || fontSize < 8 || fontSize > 200) {
+                showStatus('error', 'Font size must be a number between 8 and 200');
+                return;
+            }
+            const opacity = parseFloat(opacityInput.value);
+            if (!Number.isFinite(opacity) || opacity < 0 || opacity > 1) {
+                showStatus('error', 'Opacity must be a number between 0 and 1');
+                return;
+            }
+            const position = positionInput.value;
+            const validPositions = ['center', 'top-left', 'top-right', 'bottom-left', 'bottom-right'];
+            if (!validPositions.includes(position)) {
+                showStatus('error', 'Invalid watermark position.');
+                return;
+            }
+            watermarkOptions = { text: text, fontSize: fontSize, opacity: opacity, position: position };
+        }
+
+        setBatchControlsDisabled(true);
         setLoading(batchBtn, 'Processing...');
-        const total = batchFiles.length;
+        const total = filesToProcess.length;
         showStatus('info', `Processing ${total} file(s)... This may take a moment.`);
         
         let succeeded = 0;
         const failures = [];
         
-        for (let i = 0; i < batchFiles.length; i++) {
-            const file = batchFiles[i];
+        for (let i = 0; i < total; i++) {
+            const file = filesToProcess[i];
             try {
                 let result;
-                switch (batchOperation) {
-                    case 'rotate': {
-                        const angle = parseInt(document.getElementById('batch-rotate-angle').value, 10);
-                        result = await PDFTools.rotatePDF(file, angle);
+                switch (operation) {
+                    case 'rotate':
+                        result = await PDFTools.rotatePDF(file, rotateAngle);
                         break;
-                    }
-                    case 'watermark': {
-                        const watermarkText = document.getElementById('batch-watermark-text').value;
-                        const watermarkSize = parseInt(document.getElementById('batch-watermark-size').value, 10);
-                        const watermarkOpacity = parseFloat(document.getElementById('batch-watermark-opacity').value);
-                        const watermarkPosition = document.getElementById('batch-watermark-position').value;
-                        result = await PDFTools.watermarkPDF(file, {
-                            text: watermarkText,
-                            fontSize: watermarkSize,
-                            opacity: watermarkOpacity,
-                            position: watermarkPosition
-                        });
+                    case 'watermark':
+                        result = await PDFTools.watermarkPDF(file, watermarkOptions);
                         break;
-                    }
-                    case 'pagenumbers': {
-                        const pnPosition = document.getElementById('batch-pagenumbers-position').value;
-                        result = await PDFTools.addPageNumbers(file, { position: pnPosition });
+                    case 'pagenumbers':
+                        result = await PDFTools.addPageNumbers(file, { position: pagenumbersPosition });
                         break;
-                    }
-                    case 'remove': {
+                    case 'remove':
                         result = await PDFTools.removePDFPages(file, batchPages);
                         break;
-                    }
-                    case 'extract': {
+                    case 'extract':
                         result = await PDFTools.extractPages(file, batchPages);
                         break;
-                    }
                     default:
-                        throw new Error(`Unsupported batch operation: ${batchOperation}`);
+                        throw new Error(`Unsupported batch operation: ${operation}`);
                 }
                 
                 // Download each result immediately, then drop the reference,
@@ -335,9 +474,13 @@ async function performBatch() {
             showStatus('info', `Processed ${i + 1} of ${total} file(s)...`);
         }
         
-        // Track operations: one batch run counts as a single operation.
-        LimitsManager.trackOperation();
-        
+        // Track operations: one batch run counts as exactly one operation,
+        // and only when at least one file actually succeeded - a run where
+        // every file failed consumed no capacity.
+        if (succeeded > 0) {
+            LimitsManager.trackOperation();
+        }
+
         if (failures.length === 0) {
             showStatus('success', `Successfully processed ${succeeded} file(s)!`);
         } else {
@@ -345,18 +488,37 @@ async function performBatch() {
             showStatus('error',
                 `Processed ${succeeded} of ${total} file(s). ${failures.length} failed: ${detail}`);
         }
-        
-        setTimeout(() => {
+
+        // Delayed cleanup only clears state that still belongs to THIS run:
+        // the timer is cancelled before a new one is scheduled, the identity
+        // guard skips when the selection has since changed (or the tool was
+        // reopened), an in-flight run owns the screen, and every element
+        // lookup is null-safe so a tool switch cannot throw.
+        clearTimeout(batchCleanupTimer);
+        const filesAtCleanup = batchFiles;
+        batchCleanupTimer = setTimeout(() => {
+            batchCleanupTimer = null;
+            if (batchInFlight) return;
+            if (batchFiles !== filesAtCleanup) return;
             batchFiles = [];
-            document.getElementById('batch-file-list').innerHTML = '';
-            document.getElementById('batch-actions').style.display = 'none';
-            document.getElementById('batch-file-input').value = '';
+            const fileList = document.getElementById('batch-file-list');
+            if (fileList) fileList.innerHTML = '';
+            const actions = document.getElementById('batch-actions');
+            if (actions) actions.style.display = 'none';
+            const fileInput = document.getElementById('batch-file-input');
+            if (fileInput) fileInput.value = '';
         }, 2000);
-        
+
     } catch (error) {
         showStatus('error', error.message);
     } finally {
         unsetLoading(batchBtn, 'Process All Files');
+        // Unlock the controls and the in-flight flag after the run. If the
+        // tool was reopened mid-run, this unlocks whatever DOM is current at
+        // completion time; on an early validation return these are harmless
+        // no-ops on already-unlocked state.
+        setBatchControlsDisabled(false);
+        batchInFlight = false;
     }
 }
 
