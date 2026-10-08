@@ -2,6 +2,11 @@
  * CleanVault - Watermark Tool Module (Pro)
  */
 
+// Pending post-success cleanup timer. Cancelled before a new one is scheduled
+// and guarded by file identity so a delayed callback can never clear state
+// belonging to a later selection or another tool.
+let watermarkCleanupTimer = null;
+
 function getWatermarkToolHTML() {
     return `
         <div class="tool-header">
@@ -20,7 +25,7 @@ function getWatermarkToolHTML() {
             <p class="form-hint">Select one PDF file to add watermark</p>
             <input type="file" id="watermark-file-input" accept=".pdf">
         </div>
-        <div class="page-info" id="watermark-info" style="display: none;">
+        <div class="page-info" id="watermark-page-info" style="display: none;">
             <strong>File:</strong> <span id="watermark-file-name"></span><br>
             <strong>Total Pages:</strong> <span id="watermark-total-pages"></span>
         </div>
@@ -77,7 +82,7 @@ function initializeWatermarkTool() {
     watermarkBtn.addEventListener('click', async () => await performWatermark());
     clearBtn.addEventListener('click', () => {
         currentFiles = [];
-        document.getElementById('watermark-info').style.display = 'none';
+        document.getElementById('watermark-page-info').style.display = 'none';
         document.getElementById('watermark-options-group').style.display = 'none';
         document.getElementById('watermark-actions').style.display = 'none';
         fileInput.value = '';
@@ -121,32 +126,66 @@ async function handleWatermarkFile(file) {
 }
 
 async function performWatermark() {
-    if (!currentFiles[0]) { showStatus('error', 'Please select a PDF file first'); return; }
-    const watermarkText = document.getElementById('watermark-text').value.trim();
-    if (!watermarkText) { showStatus('error', 'Please enter watermark text'); return; }
-
-    const options = {
-        text: watermarkText,
-        fontSize: parseInt(document.querySelector('input[name="font-size"]:checked').value),
-        opacity: parseFloat(document.querySelector('input[name="opacity"]:checked').value),
-        rotation: parseInt(document.querySelector('input[name="watermark-rotation"]:checked').value),
-        position: document.querySelector('input[name="position"]:checked').value
-    };
-
     const watermarkBtn = document.getElementById('watermark-btn');
     try {
+        if (!currentFiles[0]) { showStatus('error', 'Please select a PDF file first'); return; }
+        const processedFile = currentFiles[0];
+
+        // Re-check Pro status at execution time. The licence may have been
+        // deactivated or may have expired since the file was selected.
+        if (typeof LicenseManager !== 'undefined' && !LicenseManager.isActivated()) {
+            showStatus('error', '⚠️ This is a Pro feature. Please upgrade to CleanVault Pro to unlock watermarks and all Pro features.');
+            return;
+        }
+
+        // Gather options inside the try block: a missing input or unchecked
+        // radio must surface as a friendly status message, never as an
+        // unhandled rejection from this async handler.
+        const textInput = document.getElementById('watermark-text');
+        if (!textInput) { showStatus('error', 'Watermark options are missing. Please reload the page and try again.'); return; }
+        const watermarkText = textInput.value.trim();
+        if (!watermarkText) { showStatus('error', 'Please enter watermark text'); return; }
+
+        const fontSizeInput = document.querySelector('input[name="font-size"]:checked');
+        const opacityInput = document.querySelector('input[name="opacity"]:checked');
+        const rotationInput = document.querySelector('input[name="watermark-rotation"]:checked');
+        const positionInput = document.querySelector('input[name="position"]:checked');
+        if (!fontSizeInput || !opacityInput || !rotationInput || !positionInput) {
+            showStatus('error', 'Watermark options are missing. Please reload the page and try again.');
+            return;
+        }
+
+        const options = {
+            text: watermarkText,
+            fontSize: parseInt(fontSizeInput.value),
+            opacity: parseFloat(opacityInput.value),
+            rotation: parseInt(rotationInput.value),
+            position: positionInput.value
+        };
+
         setLoading(watermarkBtn, 'Adding Watermark...');
         showStatus('info', 'Adding watermark to all pages... This may take a moment.');
-        const result = await PDFTools.watermarkPDF(currentFiles[0], options);
+        const result = await PDFTools.watermarkPDF(processedFile, options);
         LimitsManager.trackOperation();
         PDFTools.downloadFile(result.data, result.name);
         showStatus('success', 'Watermark added successfully! Downloading...');
-        setTimeout(() => {
+        // Delayed cleanup only clears state that still belongs to THIS run: the
+        // identity guard skips when a newer file is selected or another tool
+        // owns currentFiles, and every element lookup is null-safe so a tool
+        // switch (which replaces the tool DOM) cannot throw.
+        clearTimeout(watermarkCleanupTimer);
+        watermarkCleanupTimer = setTimeout(() => {
+            watermarkCleanupTimer = null;
+            if (currentFiles[0] !== processedFile) return;
             currentFiles = [];
-            document.getElementById('watermark-info').style.display = 'none';
-            document.getElementById('watermark-options-group').style.display = 'none';
-            document.getElementById('watermark-actions').style.display = 'none';
-            document.getElementById('watermark-file-input').value = '';
+            const infoPanel = document.getElementById('watermark-page-info');
+            const optionsGroup = document.getElementById('watermark-options-group');
+            const actions = document.getElementById('watermark-actions');
+            const fileInput = document.getElementById('watermark-file-input');
+            if (infoPanel) infoPanel.style.display = 'none';
+            if (optionsGroup) optionsGroup.style.display = 'none';
+            if (actions) actions.style.display = 'none';
+            if (fileInput) fileInput.value = '';
         }, 2000);
     } catch (error) {
         showStatus('error', error.message);

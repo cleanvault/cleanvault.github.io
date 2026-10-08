@@ -24,7 +24,7 @@ function getPageNumbersToolHTML() {
             <p class="form-hint">Select one PDF file to add page numbers</p>
             <input type="file" id="pagenumbers-file-input" accept=".pdf">
         </div>
-        <div class="page-info" id="pagenumbers-info" style="display: none;">
+        <div class="page-info" id="pagenumbers-page-info" style="display: none;">
             <strong>File:</strong> <span id="pagenumbers-file-name"></span><br>
             <strong>Total Pages:</strong> <span id="pagenumbers-total-pages"></span>
         </div>
@@ -59,7 +59,7 @@ function initializePageNumbersTool() {
     pageNumbersBtn.addEventListener('click', async () => await performPageNumbers());
     clearBtn.addEventListener('click', () => {
         currentFiles = [];
-        document.getElementById('pagenumbers-info').style.display = 'none';
+        document.getElementById('pagenumbers-page-info').style.display = 'none';
         document.getElementById('pagenumbers-options-group').style.display = 'none';
         document.getElementById('pagenumbers-actions').style.display = 'none';
         fileInput.value = '';
@@ -141,7 +141,7 @@ async function performPageNumbers() {
             showStatus('success', 'Page numbers added successfully!');
             setTimeout(() => {
                 currentFiles = [];
-                document.getElementById('pagenumbers-info').style.display = 'none';
+                document.getElementById('pagenumbers-page-info').style.display = 'none';
                 document.getElementById('pagenumbers-options-group').style.display = 'none';
                 document.getElementById('pagenumbers-actions').style.display = 'none';
                 document.getElementById('pagenumbers-file-input').value = '';

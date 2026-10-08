@@ -841,6 +841,13 @@ async function watermarkPDF(pdfFile, options) {
             throw userFacingError('Opacity must be a number between 0 and 1');
         }
         
+        // rotation must be a finite number of degrees: degrees(Infinity) and
+        // degrees(NaN) write NaN matrices into the content stream while save()
+        // still succeeds, silently producing a corrupt PDF.
+        if (!Number.isFinite(rotation)) {
+            throw userFacingError('Rotation must be a number of degrees');
+        }
+
         // Embed a standard font (Helvetica)
         const font = await pdf.embedFont(PDFLib.StandardFonts.HelveticaBold);
         
