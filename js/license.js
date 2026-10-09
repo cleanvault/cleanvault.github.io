@@ -17,6 +17,34 @@
  * Signatures are SHA-256, computed locally with a built-in implementation so
  * verification can be synchronous and fully offline. No network requests are
  * ever made by this module.
+ *
+ * ACTUAL SECURITY MODEL OF THE SIGNING SECRET (important clarification):
+ * The signing secret (SECRET_KEY) is embedded in the browser-delivered code:
+ *   - js/license.js           (this file)
+ *   - tools/generate-license.js
+ *   - success.html            (the page the user pastes their key into;
+ *                             the secret is not sent to a server, but it is
+ *                             visible in the page's source)
+ * Because the secret travels inside every client's browser it is effectively
+ * public: any user who opens the browser's developer console can read it.
+ * A shared secret that is public does not provide cryptographic
+ * authenticity. SHA-256 over a public shared secret is a MAC (message
+ * authentication code), not a signature. It deters casual tampering and
+ * accidental corruption, and it genuinely rejects accidental edits and
+ * typos by a user who does not know the secret, but it does NOT provide
+ * cryptographic authenticity against a determined user: that same user can
+ * recompute the SHA-256 over any (version, plan, random, expiry) tuple they
+ * choose and forge a valid-looking key. No amount of client-side hardening
+ * closes this gap; a user who can inspect and run the source can
+ * reproduce the signing algorithm.
+ *
+ * This is a deliberate business/model limitation, not a fixable code bug.
+ *   - With a backend, the private signing key would stay server-side while
+ *     the client would receive only a public verification key.
+ *   - The hardening remaining for later work is an asymmetric redesign
+ *     (for example Ed25519): keep a private key out of the browser, embed a
+ *     public verification key, and verify signatures there. That is a
+ *     separate, larger change and is intentionally NOT part of this audit.
  */
 
 const LicenseManager = (function() {
@@ -27,7 +55,58 @@ const LicenseManager = (function() {
     // Signing secret. Shared with tools/generate-license.js and success.html.
     // Unchanged so that already-issued licenses keep verifying.
     const SECRET_KEY = 'CleanVault-Pro-License-Secret-2024-Secure-Key';
-    
+
+    // =====================================================================
+    // Activation storage (record-based, backward-compatible with legacy keys)
+    // =====================================================================
+
+    // The single source of truth for an activated Pro license.
+    //
+    // Old layout (still read and migrated for compatibility):
+    //   cleanvault_pro_activated,
+    //   cleanvault_pro_activated_date,
+    //   cleanvault_pro_license_key,
+    //   cleanvault_pro_activated_plan,
+    //   cleanvault_pro_activated_expiry
+    const ACTIVATION_KEY = 'cleanvault_pro_activation';
+
+    // Fields carried inside the activation record.
+    const ACTIVATION_ACTIVE = 'activated';
+    const ACTIVATION_DATE = 'date';
+    const ACTIVATION_LICENSE = 'license';
+    const ACTIVATION_PLAN = 'plan';
+    const ACTIVATION_EXPIRY = 'expiry';
+
+    /** Read the whole activation record, or null if absent/invalid. */
+    function readActivationRecord() {
+        try {
+            const raw = localStorage.getItem(ACTIVATION_KEY);
+            if (!raw) return null;
+            return JSON.parse(raw);
+        } catch (error) {
+            return null;
+        }
+    }
+
+    /** Write the whole activation record in a single, atomic localStorage write. */
+    function writeActivationRecord(record) {
+        try {
+            localStorage.setItem(ACTIVATION_KEY, JSON.stringify(record));
+            return true;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    /** Remove the primary activation record. Returns true on success. */
+    function removeActivationRecord() {
+        try {
+            return localStorage.removeItem(ACTIVATION_KEY) === 0;
+        } catch (error) {
+            return false;
+        }
+    }
+
     // Valid plan suffixes (last 3 chars of the 5-char version+plan block).
     // 'PRO' = Personal, 'COR' = Corporate. Both currently unlock the same
     // Pro feature set; the plan is recorded so the distinction is available.
@@ -314,9 +393,41 @@ const LicenseManager = (function() {
      */
     function isActivated() {
         try {
-            if (localStorage.getItem(STORAGE_KEY) !== 'true') return false;
-            const storedLicense = localStorage.getItem(STORAGE_LICENSE_KEY);
+            // New format: a single JSON record under ACTIVATION_KEY.
+            const record = readActivationRecord();
+
+            // If the new record format is absent, fall back to the legacy
+            // single-key layout (cleanvault_pro_activated, stored license key,
+            // plan, expiry) for already-activated users.
+            if (!record) {
+                if (localStorage.getItem(STORAGE_KEY) !== 'true') return false;
+                const storedLicense = localStorage.getItem(STORAGE_LICENSE_KEY);
+                if (!storedLicense) return false;
+                return validateLicense(storedLicense).valid === true;
+            }
+
+            // The record must be a non-empty object with an activation flag.
+            if (typeof record !== 'object' || Array.isArray(record) ||
+                typeof record[ACTIVATION_ACTIVE] !== 'boolean' ||
+                !record[ACTIVATION_ACTIVE]) {
+                return false;
+            }
+
+            // The record must include a license key.
+            const storedLicense = typeof record[ACTIVATION_LICENSE] === 'string'
+                ? record[ACTIVATION_LICENSE]
+                : null;
             if (!storedLicense) return false;
+
+            // The record must also be complete: a valid activation record
+            // carries date, plan, and expiry. Partial records (e.g. from a
+            // failed concurrent write) are not a valid activation.
+            if (typeof record[ACTIVATION_DATE] !== 'string' ||
+                typeof record[ACTIVATION_PLAN] !== 'string' ||
+                typeof record[ACTIVATION_EXPIRY] !== 'string') {
+                return false;
+            }
+
             return validateLicense(storedLicense).valid === true;
         } catch (error) {
             console.error('Error checking activation status:', error);
@@ -336,11 +447,22 @@ const LicenseManager = (function() {
                 return { success: false, message: validation.reason || 'Invalid license key' };
             }
             
-            localStorage.setItem(STORAGE_KEY, 'true');
-            localStorage.setItem(STORAGE_DATE_KEY, new Date().toISOString());
-            localStorage.setItem(STORAGE_LICENSE_KEY, licenseKey.trim().toUpperCase());
-            localStorage.setItem(STORAGE_KEY + '_plan', validation.plan);
-            localStorage.setItem(STORAGE_KEY + '_expiry', validation.expiry);
+            // Persist the whole activation state as a single JSON record in one
+            // atomic localStorage write. If the write fails, nothing is stored
+            // and activation fails closed: Pro is never granted and no partial
+            // state is left behind.
+            const record = {
+                [ACTIVATION_ACTIVE]: true,
+                [ACTIVATION_DATE]: new Date().toISOString(),
+                [ACTIVATION_LICENSE]: licenseKey.trim().toUpperCase(),
+                [ACTIVATION_PLAN]: validation.plan,
+                [ACTIVATION_EXPIRY]: validation.expiry
+            };
+
+            if (!writeActivationRecord(record)) {
+                console.error('Failed to persist activation record. Activation aborted; Pro not granted.');
+                return { success: false, message: 'Failed to activate license. Please try again.' };
+            }
             
             const planName = validation.plan === 'COR' ? 'Corporate' : 'Personal';
             return { success: true, message: 'CleanVault Pro ' + planName + ' activated successfully!' };
@@ -350,12 +472,19 @@ const LicenseManager = (function() {
         }
     }
     
+
     /**
      * Deactivate the Pro license and clear all related stored values.
      * @returns {boolean}
      */
     function deactivate() {
         try {
+            // Remove the primary activation record (in a single write). Legacy
+            // individual keys are removed below for compatibility.
+            removeActivationRecord();
+
+            // Clear each legacy activation key so this module never leaves
+            // partial state that looks like an active activation.
             localStorage.removeItem(STORAGE_KEY);
             localStorage.removeItem(STORAGE_DATE_KEY);
             localStorage.removeItem(STORAGE_LICENSE_KEY);
@@ -373,7 +502,17 @@ const LicenseManager = (function() {
      * @returns {string|null} ISO date string or null
      */
     function getActivationDate() {
-        try { return localStorage.getItem(STORAGE_DATE_KEY); } catch (error) { return null; }
+        try {
+            // New format: read from the record.
+            const record = readActivationRecord();
+            if (record && typeof record[ACTIVATION_DATE] === 'string') {
+                return record[ACTIVATION_DATE];
+            }
+            // Legacy: read the individual activation date key.
+            return localStorage.getItem(STORAGE_DATE_KEY);
+        } catch (error) {
+            return null;
+        }
     }
     
     /**
@@ -381,7 +520,17 @@ const LicenseManager = (function() {
      * @returns {string|null}
      */
     function getStoredLicense() {
-        try { return localStorage.getItem(STORAGE_LICENSE_KEY); } catch (error) { return null; }
+        try {
+            // New format: read from the record.
+            const record = readActivationRecord();
+            if (record && typeof record[ACTIVATION_LICENSE] === 'string') {
+                return record[ACTIVATION_LICENSE];
+            }
+            // Legacy: read the individual license key.
+            return localStorage.getItem(STORAGE_LICENSE_KEY);
+        } catch (error) {
+            return null;
+        }
     }
     
     /**
@@ -390,7 +539,17 @@ const LicenseManager = (function() {
      * @returns {string|null}
      */
     function getPlan() {
-        try { return localStorage.getItem(STORAGE_KEY + '_plan'); } catch (error) { return null; }
+        try {
+            // New format: read from the record.
+            const record = readActivationRecord();
+            if (record && typeof record[ACTIVATION_PLAN] === 'string') {
+                return record[ACTIVATION_PLAN];
+            }
+            // Legacy: read the individual plan key.
+            return localStorage.getItem(STORAGE_KEY + '_plan');
+        } catch (error) {
+            return null;
+        }
     }
     
     /**
@@ -398,13 +557,19 @@ const LicenseManager = (function() {
      * @returns {string|null}
      */
     function getExpiry() {
-        try { return localStorage.getItem(STORAGE_KEY + '_expiry'); } catch (error) { return null; }
+        try {
+            // New format: read from the record.
+            const record = readActivationRecord();
+            if (record && typeof record[ACTIVATION_EXPIRY] === 'string') {
+                return record[ACTIVATION_EXPIRY];
+            }
+            // Legacy: read the individual expiry key.
+            return localStorage.getItem(STORAGE_KEY + '_expiry');
+        } catch (error) {
+            return null;
+        }
     }
     
-    /**
-     * Initialize the license manager and reflect the real activation state.
-     * @returns {boolean}
-     */
     function init() {
         const activated = isActivated();
         updateUIForActivation(activated);

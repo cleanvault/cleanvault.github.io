@@ -144,6 +144,8 @@ All validation happens 100% in your browser using JavaScript. No data is sent to
 
 CleanVault is intentionally a browser-only product with no backend. A determined user controls their own browser, so client-side licensing can ultimately be bypassed, and this is not claimed to prevent that.
 
+**The signing secret is public; SHA-256 is a MAC, not a signature.** The signing secret (SECRET_KEY) is embedded in the browser-delivered code: in js/license.js, tools/generate-license.js, and the success.html page. Because the secret travels inside every client's browser, it is effectively public: any user who opens the browser's developer console can read it. SHA-256 over a public shared secret is a MAC (message authentication code), not a signature. It deters casual tampering and accidental corruption, and it genuinely rejects accidental edits and typos by a user who does not know the secret, but it does NOT provide cryptographic authenticity against a determined user. A user who can inspect and run the source can reproduce the signing algorithm and forge keys. This is a deliberate business/model limitation, not a fixable code bug: with a backend, the private signing key would stay server-side while the client would receive only a public verification key. The hardening remaining for later work is an asymmetric redesign (for example Ed25519) — keep a private key out of the browser, embed a public verification key, and verify signatures there. That is a separate, larger change and is intentionally not part of this documentation update.
+
 What the implementation does enforce:
 
 - A valid, signed, unexpired license key must be present. Setting a browser flag by hand grants nothing.
